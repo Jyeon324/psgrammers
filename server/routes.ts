@@ -74,8 +74,8 @@ export async function registerRoutes(
   // Compiler
   app.post(api.compiler.run.path, async (req, res) => {
     try {
-      const { code, input } = api.compiler.run.input.parse(req.body);
-      const result = await compileAndRun(code, input);
+      const { code, language, input } = api.compiler.run.input.parse(req.body);
+      const result = await compileAndRun(code, language, input);
       res.json(result);
     } catch (error: any) {
       res.status(200).json({ success: false, output: "", error: error.message });
