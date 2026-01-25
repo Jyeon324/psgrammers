@@ -1,18 +1,64 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, varchar, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { users } from "./models/auth";
+export * from "./models/auth";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+// === TABLE DEFINITIONS ===
+
+export const problems = pgTable("problems", {
+  id: serial("id").primaryKey(),
+  bojId: integer("boj_id").unique().notNull(),
+  title: text("title").notNull(),
+  tier: integer("tier").default(0), // Solved.ac tier
+  category: text("category"), // JSON string or simple text tag
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const solutions = pgTable("solutions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(), // No FK constraint for simplicity with Replit Auth, or add if consistent
+  problemId: integer("problem_id").references(() => problems.id).notNull(),
+  code: text("code").notNull(),
+  language: text("language").default("cpp"),
+  status: text("status").default("pending"), // 'solved', 'failed', 'pending'
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+// === SCHEMAS ===
+
+export const insertProblemSchema = createInsertSchema(problems).omit({ id: true });
+export const insertSolutionSchema = createInsertSchema(solutions).omit({ id: true, createdAt: true });
+
+// === EXPLICIT TYPES ===
+
+export type Problem = typeof problems.$inferSelect;
+export type InsertProblem = z.infer<typeof insertProblemSchema>;
+
+export type Solution = typeof solutions.$inferSelect;
+export type InsertSolution = z.infer<typeof insertSolutionSchema>;
+
+// Request Types
+export type CreateSolutionRequest = {
+  problemId: number;
+  code: string;
+  language: string;
+  status: string;
+};
+
+// Compiler Types
+export type CompileRequest = {
+  code: string;
+  language: string;
+  input?: string;
+};
+
+export type CompileResponse = {
+  output: string;
+  error?: string;
+  success: boolean;
+};
+
+// BOJ Sync Type
+export type SyncProblemRequest = {
+  bojId: number;
+};
