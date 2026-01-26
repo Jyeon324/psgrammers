@@ -33,4 +33,10 @@ public class ProblemController {
             throws java.io.IOException {
         return ResponseEntity.ok(problemService.syncProblem(request.getBojId()));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProblem(@PathVariable Integer id) {
+        problemRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

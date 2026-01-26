@@ -46,6 +46,14 @@ export const api = {
         500: errorSchemas.internal,
       },
     },
+    delete: {
+      method: "DELETE" as const,
+      path: "/api/problems/:id",
+      responses: {
+        240: z.void(), // Changed from 204 because 204 is no content
+        404: errorSchemas.notFound,
+      },
+    },
   },
   solutions: {
     list: {

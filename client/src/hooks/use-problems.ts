@@ -12,11 +12,11 @@ export function useProblems(filters?: { search?: string; category?: string; tier
       if (filters?.search) params.append("search", filters.search);
       if (filters?.category) params.append("category", filters.category);
       if (filters?.tier) params.append("tier", filters.tier.toString());
-      
+
       const url = `${api.problems.list.path}?${params.toString()}`;
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch problems");
-      
+
       const data = await res.json();
       return api.problems.list.responses[200].parse(data);
     },
@@ -31,7 +31,7 @@ export function useProblem(id: number) {
       const res = await fetch(url, { credentials: "include" });
       if (res.status === 404) return null;
       if (!res.ok) throw new Error("Failed to fetch problem");
-      
+
       const data = await res.json();
       return api.problems.get.responses[200].parse(data);
     },
@@ -57,13 +57,31 @@ export function useSyncProblem() {
           throw new Error(error.message);
         }
         if (res.status === 500) {
-           const error = api.problems.sync.responses[500].parse(await res.json());
-           throw new Error(error.message);
+          const error = api.problems.sync.responses[500].parse(await res.json());
+          throw new Error(error.message);
         }
         throw new Error("Failed to sync problem");
       }
 
       return api.problems.sync.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.problems.list.path] });
+    },
+  });
+}
+export function useDeleteProblem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.problems.delete.path, { id });
+      const res = await fetch(url, {
+        method: api.problems.delete.method,
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete problem");
+      return;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.problems.list.path] });
