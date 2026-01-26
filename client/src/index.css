@@ -89,3 +89,30 @@
 .animate-pulse-subtle {
   animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Problem Detail HTML Content Styles */
+.problem-html {
+  line-height: 1.6;
+}
+
+.problem-html img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  border-radius: var(--radius);
+  @apply border border-white/5;
+}
+
+.problem-html p {
+  margin-bottom: 1rem;
+}
+
+.problem-html ul, .problem-html ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.problem-html li {
+  margin-bottom: 0.5rem;
+}

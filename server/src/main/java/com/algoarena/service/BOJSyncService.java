@@ -25,6 +25,15 @@ public class BOJSyncService {
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                 .get();
 
+        // Convert relative image URLs to absolute URLs
+        Elements images = doc.select("img");
+        for (Element img : images) {
+            String src = img.attr("src");
+            if (src.startsWith("/")) {
+                img.attr("src", "https://www.acmicpc.net" + src);
+            }
+        }
+
         String title = doc.select("#problem_title").text();
         String description = doc.select("#problem_description").html();
         String inputDescription = doc.select("#problem_input").html();
@@ -40,7 +49,6 @@ public class BOJSyncService {
                 .build();
 
         // Extract sample inputs and outputs
-        // Typically BOJ has sample-input-1, sample-output-1, etc.
         for (int i = 1;; i++) {
             Element inputElem = doc.getElementById("sample-input-" + i);
             Element outputElem = doc.getElementById("sample-output-" + i);
@@ -49,10 +57,11 @@ public class BOJSyncService {
                 break;
             }
 
+            // Using pure text and trimming to avoid hidden HTML or extra whitespace issues
             TestCase testCase = TestCase.builder()
                     .problem(problem)
-                    .input(inputElem.text())
-                    .expectedOutput(outputElem.text())
+                    .input(inputElem.text().trim())
+                    .expectedOutput(outputElem.text().trim())
                     .sampleNumber(i)
                     .build();
             problem.getTestCases().add(testCase);
