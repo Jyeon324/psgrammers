@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertProblemSchema, insertSolutionSchema, problems, solutions } from './schema';
+import { insertProblemSchema, insertSolutionSchema, problems, solutions, Problem, TestCase } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -32,16 +32,16 @@ export const api = {
       method: 'GET' as const,
       path: '/api/problems/:id',
       responses: {
-        200: z.custom<typeof problems.$inferSelect>(),
+        200: z.custom<Problem>(),
         404: errorSchemas.notFound,
       },
     },
     sync: {
-      method: 'POST' as const,
-      path: '/api/problems/sync',
+      method: "POST" as const,
+      path: "/api/problems/sync",
       input: z.object({ bojId: z.number() }),
       responses: {
-        201: z.custom<typeof problems.$inferSelect>(),
+        201: z.custom<Problem>(),
         400: errorSchemas.validation,
         500: errorSchemas.internal,
       },

@@ -46,11 +46,11 @@ export default function Solve() {
           <h1 className="font-bold text-lg truncate max-w-md">{problem.title}</h1>
           <TierBadge tier={problem.tier || 0} />
         </div>
-        
+
         <div className="flex items-center gap-2">
-           <a 
-            href={`https://www.acmicpc.net/problem/${problem.bojId}`} 
-            target="_blank" 
+          <a
+            href={`https://www.acmicpc.net/problem/${problem.bojId}`}
+            target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 mr-2"
           >
@@ -62,44 +62,63 @@ export default function Solve() {
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal">
-          
+
           {/* Left: Problem Description */}
           <ResizablePanel defaultSize={40} minSize={20} className="bg-background">
             <div className="h-full overflow-y-auto p-8 custom-scrollbar">
               <div className="prose prose-invert max-w-none prose-headings:font-bold prose-p:text-muted-foreground prose-code:text-primary prose-pre:bg-secondary/50">
                 <div className="flex items-center gap-2 mb-6">
                   <span className="font-mono text-sm text-muted-foreground">ID: {problem.bojId}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-secondary text-xs text-muted-foreground">{problem.category || 'Algorithm'}</span>
-                </div>
-                
-                {/* 
-                  Ideally, we'd render HTML content here. 
-                  Since we don't have the full body content from the schema for simplicity,
-                  I'll place a placeholder. In a real app, `problem.content` would be here.
-                */}
-                <h3>Description</h3>
-                <p>
-                  This is a practice environment for problem <strong>{problem.title}</strong> (BOJ {problem.bojId}).
-                </p>
-                <p>
-                  Since we are syncing metadata only in this demo, please refer to the official problem statement on Baekjoon Online Judge for the full details, input/output specifications, and examples.
-                </p>
-                
-                <div className="mt-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <h4 className="text-blue-400 m-0 mb-2">Sync Note</h4>
-                  <p className="text-sm m-0">
-                    The backend scrapes or uses an API to get metadata. Full problem text usually requires parsing HTML which is omitted for this MVP scope.
-                  </p>
+                  <span className="px-2 py-0.5 rounded-full bg-secondary text-xs text-muted-foreground">{problem.category || '알고리즘'}</span>
                 </div>
 
+                {problem.description ? (
+                  <>
+                    <section className="mb-8">
+                      <h3 className="text-xl font-bold mb-4 border-b border-white/10 pb-2">문제 설명</h3>
+                      <div
+                        className="problem-html"
+                        dangerouslySetInnerHTML={{ __html: problem.description }}
+                      />
+                    </section>
+
+                    {problem.inputDescription && (
+                      <section className="mb-8">
+                        <h3 className="text-xl font-bold mb-4 border-b border-white/10 pb-2">입력</h3>
+                        <div
+                          className="problem-html"
+                          dangerouslySetInnerHTML={{ __html: problem.inputDescription }}
+                        />
+                      </section>
+                    )}
+
+                    {problem.outputDescription && (
+                      <section className="mb-8">
+                        <h3 className="text-xl font-bold mb-4 border-b border-white/10 pb-2">출력</h3>
+                        <div
+                          className="problem-html"
+                          dangerouslySetInnerHTML={{ __html: problem.outputDescription }}
+                        />
+                      </section>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <h3>Description</h3>
+                    <p>
+                      이 문제는 현재 메타데이터만 동기화된 상태입니다. 상세 내용을 보려면 아래 버튼을 눌러 동기화를 다시 진행하거나 백준에서 직접 확인해주세요.
+                    </p>
+                  </>
+                )}
+
                 <div className="mt-8">
-                   <a 
-                    href={`https://www.acmicpc.net/problem/${problem.bojId}`} 
-                    target="_blank" 
+                  <a
+                    href={`https://www.acmicpc.net/problem/${problem.bojId}`}
+                    target="_blank"
                     rel="noopener noreferrer"
                   >
                     <Button variant="outline" className="w-full">
-                      Open Problem Statement <ExternalLink className="ml-2 w-4 h-4" />
+                      백준에서 직접 보기 <ExternalLink className="ml-2 w-4 h-4" />
                     </Button>
                   </a>
                 </div>
@@ -115,7 +134,7 @@ export default function Solve() {
               <IDE problem={problem} />
             </div>
           </ResizablePanel>
-          
+
         </ResizablePanelGroup>
       </div>
     </div>
