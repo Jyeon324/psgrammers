@@ -4,3 +4,24 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+# Java / Spring Boot
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+bin/
+*.class
+.classpath
+.project
+.settings/
+.idea/
+*.iml
+out/
+target/
+
+# Environment
+.env
+.env.local
+.DS_Store
+

@@ -80,7 +80,7 @@ export const api = {
       responses: {
         200: z.object({
           output: z.string(),
-          error: z.string().optional(),
+          error: z.string().nullish(),
           success: z.boolean(),
         }),
       },
