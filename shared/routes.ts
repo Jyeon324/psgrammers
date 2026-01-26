@@ -96,6 +96,10 @@ export const api = {
   },
 };
 
+export type CompileRequest = z.infer<typeof api.compiler.run.input>;
+export type CreateSolutionRequest = z.infer<typeof api.solutions.create.input>;
+export type SyncProblemRequest = z.infer<typeof api.problems.sync.input>;
+
 export function buildUrl(path: string, params?: Record<string, string | number>): string {
   let url = path;
   if (params) {

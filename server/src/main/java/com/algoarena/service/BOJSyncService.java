@@ -103,10 +103,32 @@ public class BOJSyncService {
 
     private String extractTagsFromJson(String json) {
         List<String> tags = new ArrayList<>();
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\"key\":\\s*\"([^\"]+)\"");
-        java.util.regex.Matcher matcher = pattern.matcher(json);
-        while (matcher.find()) {
-            tags.add(matcher.group(1));
+        // Solved.ac tags structure: "tags": [{"key": "math", "displayNames":
+        // [{"language": "ko", "name": "수학"}, {"language": "en", "name":
+        // "mathematics"}]}]
+        // We'll look for language: "ko" names.
+        // A more robust way would be using ObjectMapper, but keeping it simple with
+        // regex for now.
+
+        java.util.regex.Pattern tagPattern = java.util.regex.Pattern
+                .compile("\\{\"key\":\"([^\"]+)\".*?\"displayNames\":\\[(.*?)\\]");
+        java.util.regex.Matcher tagMatcher = tagPattern.matcher(json.replace(" ", ""));
+
+        while (tagMatcher.find()) {
+            String koName = null;
+            String displayNames = tagMatcher.group(2);
+            java.util.regex.Pattern koPattern = java.util.regex.Pattern
+                    .compile("\\{\"language\":\"ko\",\"name\":\"([^\"]+)\"\\}");
+            java.util.regex.Matcher koMatcher = koPattern.matcher(displayNames);
+            if (koMatcher.find()) {
+                koName = koMatcher.group(1);
+            }
+
+            if (koName != null) {
+                tags.add(koName);
+            } else {
+                tags.add(tagMatcher.group(1)); // Fallback to key
+            }
         }
         return String.join(",", tags);
     }

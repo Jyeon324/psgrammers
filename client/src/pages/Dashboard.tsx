@@ -2,76 +2,124 @@ import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { useSolutions } from "@/hooks/use-solutions";
 import { Card } from "@/components/ui/card";
-import { Activity, CheckCircle2, Clock, Code2, Award, Tag } from "lucide-react";
-import { format, startOfYear, eachDayOfInterval, isSameDay } from "date-fns";
-import { Link } from "wouter";
-import { ActivityCalendar } from "react-activity-calendar";
+import { Loader2, CheckCircle2, Activity, Tag, Clock, Award } from "lucide-react";
+import { format, subDays, startOfDay, eachDayOfInterval, isSameDay } from "date-fns";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
-import { Solution } from "@shared/schema";
+import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
-const TIER_COLORS: Record<string, string> = {
-  "Unrated": "#adbac7",
-  "Bronze": "#ad5600",
-  "Silver": "#435f7a",
-  "Gold": "#ec9a00",
-  "Platinum": "#27e2a4",
-  "Diamond": "#00b4fc",
-  "Ruby": "#ff0062"
-};
+// Custom Minimal Heatmap to avoid library crashes
+function CustomHeatmap({ data }: { data: any[] }) {
+  const today = startOfDay(new Date());
+  const startDate = subDays(today, 180); // Last 6 months
 
-const getTierGroup = (level: number) => {
-  if (level === 0) return "Unrated";
-  if (level <= 5) return "Bronze";
-  if (level <= 10) return "Silver";
-  if (level <= 15) return "Gold";
-  if (level <= 20) return "Platinum";
-  if (level <= 25) return "Diamond";
-  return "Ruby";
-};
+  const days = eachDayOfInterval({ start: startDate, end: today });
+
+  return (
+    <div className="flex flex-wrap gap-1 justify-center max-w-full overflow-hidden p-1">
+      {days.map((day) => {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const entry = data.find(d => d.date === dateStr);
+        const count = entry?.count || 0;
+
+        // GitHub-like color scaling
+        let color = "bg-[#161b22]"; // Empty
+        if (count >= 5) color = "bg-[#39d353]";
+        else if (count >= 3) color = "bg-[#26a641]";
+        else if (count >= 2) color = "bg-[#006d32]";
+        else if (count >= 1) color = "bg-[#0e4429]";
+
+        return (
+          <div
+            key={dateStr}
+            className={cn("w-3 h-3 rounded-[2px] transition-colors hover:ring-1 hover:ring-white/20", color)}
+            title={`${dateStr}: ${count} problems`}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { data: solutions, isLoading } = useSolutions();
 
-  // 1. Prepare Heatmap Data
-  const calendarData = solutions ? solutions.reduce((acc: any[], sol: Solution) => {
-    const date = format(new Date(sol.createdAt!), 'yyyy-MM-dd');
-    const existing = acc.find(d => d.date === date);
-    if (existing) {
-      existing.count += 1;
-      existing.level = Math.min(4, Math.floor(existing.count / 2) + 1);
-    } else {
-      acc.push({ date, count: 1, level: 1 });
-    }
-    return acc;
-  }, []) : [];
+  let calendarData: any[] = [];
+  let tierStats: any[] = [];
+  let tagStats: any[] = [];
 
-  // 2. Prepare Tier Stats
-  const tierStats = solutions ? Object.entries(
-    solutions.reduce((acc: Record<string, number>, sol: Solution) => {
-      const tierGroup = getTierGroup(sol.problem?.tier || 0);
-      acc[tierGroup] = (acc[tierGroup] || 0) + 1;
+  const TIER_COLORS: Record<string, string> = {
+    "Unrated": "#adbac7", "Bronze": "#ad5600", "Silver": "#435f7a",
+    "Gold": "#ec9a00", "Platinum": "#27e2a4", "Diamond": "#00b4fc", "Ruby": "#ff0062"
+  };
+
+  const getTierGroup = (level: number) => {
+    if (level === 0) return "Unrated";
+    if (level <= 5) return "Bronze";
+    if (level <= 10) return "Silver";
+    if (level <= 15) return "Gold";
+    if (level <= 20) return "Platinum";
+    if (level <= 25) return "Diamond";
+    return "Ruby";
+  };
+
+  if (solutions) {
+    // 1. Prepare Heatmap Data
+    calendarData = solutions.reduce((acc: any[], sol: any) => {
+      if (!sol.createdAt) return acc;
+      try {
+        const d = new Date(sol.createdAt);
+        if (isNaN(d.getTime())) return acc;
+        const date = format(d, 'yyyy-MM-dd');
+        const existing = acc.find(d => d.date === date);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          acc.push({ date, count: 1 });
+        }
+      } catch (e) { }
       return acc;
-    }, {})
-  ).map(([name, value]) => ({ name, value, fill: TIER_COLORS[name] })) : [];
+    }, []);
 
-  // 3. Prepare Tag Stats
-  const tagStats = solutions ? (Object.entries(
-    solutions.reduce((acc: Record<string, number>, sol: Solution) => {
-      const tags = sol.problem?.category?.split(",") || [];
-      tags.forEach((tag: string) => {
-        if (tag.trim()) acc[tag] = (acc[tag] || 0) + 1;
-      });
-      return acc;
-    }, {})
-  ) as [string, number][]).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, value]) => ({ name, value })) : [];
+    // 2. Prepare Tier Stats
+    tierStats = Object.entries(
+      solutions.reduce((acc: Record<string, number>, sol: any) => {
+        const tierGroup = getTierGroup(sol.problem?.tier || 0);
+        acc[tierGroup] = (acc[tierGroup] || 0) + 1;
+        return acc;
+      }, {})
+    ).map(([name, value]) => ({ name, value, fill: TIER_COLORS[name] || "#ccc" }));
 
-  const stats = [
+    // 3. Prepare Tag Stats
+    tagStats = (Object.entries(
+      solutions.reduce((acc: Record<string, number>, sol: any) => {
+        const tags = sol.problem?.category?.split(",") || [];
+        tags.forEach((tag: string) => {
+          const trimmed = tag.trim();
+          if (trimmed) acc[trimmed] = (acc[trimmed] || 0) + 1;
+        });
+        return acc;
+      }, {})
+    ) as [string, number][]).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, value]) => ({ name, value }));
+  }
+
+  const topStats = [
     { label: "Total Solved", value: solutions?.length || 0, icon: CheckCircle2, color: "text-green-500 bg-green-500/10" },
-    { label: "Activity Level", value: calendarData.length > 0 ? "Active" : "New", icon: Activity, color: "text-blue-500 bg-blue-500/10" },
-    { label: "Top Tags", value: tagStats[0]?.name || "None", icon: Tag, color: "text-purple-500 bg-purple-500/10" },
+    { label: "Activity Days", value: calendarData.length, icon: Activity, color: "text-blue-500 bg-blue-500/10" },
+    { label: "Top Category", value: tagStats[0]?.name || "None", icon: Tag, color: "text-purple-500 bg-purple-500/10" },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex">
+        <Sidebar />
+        <main className="flex-1 ml-64 p-8 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -79,20 +127,19 @@ export default function Dashboard() {
       <main className="flex-1 ml-64 p-8">
         <header className="mb-8">
           <h1 className="text-3xl font-bold mb-2 tracking-tight">Welcome back, {user?.firstName || 'Coder'}</h1>
-          <p className="text-muted-foreground">Keep up the great work! You've solved {solutions?.length || 0} problems.</p>
+          <p className="text-muted-foreground">You've successfully solved {solutions?.length || 0} problems.</p>
         </header>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {stats.map((stat, i) => (
-            <Card key={i} className="p-6 border-white/5 bg-secondary/10 backdrop-blur-sm hover:bg-secondary/20 transition-all cursor-default">
+          {topStats.map((stat, i) => (
+            <Card key={i} className="p-6 border-white/5 bg-secondary/10 backdrop-blur-sm shadow-xl">
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-xl ${stat.color}`}>
                   <stat.icon className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{stat.label}</p>
-                  <p className="text-2xl font-bold mt-1 tracking-tight">{isLoading ? "..." : stat.value}</p>
+                  <p className="text-2xl font-bold mt-1 tracking-tight">{stat.value}</p>
                 </div>
               </div>
             </Card>
@@ -103,20 +150,10 @@ export default function Dashboard() {
         <Card className="p-8 mb-8 border-white/5 bg-secondary/10 backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-6 text-muted-foreground">
             <Clock className="w-4 h-4" />
-            <h2 className="text-sm font-bold uppercase tracking-widest">Learning Activity</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest">Learning Activity (Last 6 Months)</h2>
           </div>
           <div className="flex justify-center overflow-x-auto py-2">
-            {!isLoading && (
-              <ActivityCalendar
-                data={calendarData}
-                theme={{
-                  dark: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
-                }}
-                labels={{
-                  totalCount: "{{count}} problems solved in 2024",
-                }}
-              />
-            )}
+            <CustomHeatmap data={calendarData} />
           </div>
         </Card>
 
@@ -161,7 +198,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="80%">
                 <BarChart data={tagStats} layout="vertical">
                   <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11, fill: '#adbac7' }} />
+                  <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11, fill: '#adbac7' }} tickLine={false} axisLine={false} />
                   <Tooltip
                     cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                     contentStyle={{ backgroundColor: '#1e1e1e', border: '1px solid #333', borderRadius: '8px' }}
@@ -173,7 +210,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Recent Solutions */}
+        {/* Recent Solutions List */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold tracking-tight">Recent Solutions</h2>
@@ -181,9 +218,7 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-secondary/10 backdrop-blur-sm rounded-xl border border-white/5 overflow-hidden">
-            {isLoading ? (
-              <div className="p-8 text-center text-muted-foreground">Loading history...</div>
-            ) : solutions?.length === 0 ? (
+            {!solutions || solutions.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground italic">No solutions yet. Time to conquer some problems!</div>
             ) : (
               <table className="w-full text-left">
@@ -196,7 +231,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {solutions?.slice(0, 5).map((solution: any) => (
+                  {solutions.slice(0, 5).map((solution: any) => (
                     <tr key={solution.id} className="hover:bg-white/5 transition-colors text-sm">
                       <td className="px-6 py-4 font-medium max-w-[200px] truncate">
                         {solution.problem?.title || `Problem #${solution.problemId}`}
@@ -216,7 +251,12 @@ export default function Dashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-muted-foreground text-xs text-right opacity-70">
-                        {solution.createdAt && format(new Date(solution.createdAt), 'MMM d, p')}
+                        {(() => {
+                          if (!solution.createdAt) return "";
+                          try {
+                            return format(new Date(solution.createdAt), 'MMM d, p');
+                          } catch (e) { return ""; }
+                        })()}
                       </td>
                     </tr>
                   ))}
