@@ -16,9 +16,9 @@ description: 프로젝트 개발 프로세스 (Feature Development Workflow)
 - 코드를 구현하고, 지침에 따라 `walkthrough.md`를 작성하여 결과 보고(스크린샷/녹화 포함)를 수행합니다.
 
 ## 4. 병합 요청 (Pull Request)
-- **PR 생성**: `gh pr create` 명령을 사용하며, `--body`에 반드시 **`Closes #이슈번호`** 키워드를 포함하여 병합 시 이슈가 자동 종료되도록 합니다.
-  - 예: `gh pr create --base dev --title "[Title]" --body "## 개요\n ... \nCloses #3"`
-- **PR 승인 및 머지**: 사용자가 PR을 머지할 때까지 기다리며, 머지 완료 후 로컬의 `dev` 브랜치를 최신화(`git pull origin dev`) 한 뒤 다음 작업을 시작합니다.
+- **PR 생성**: `gh pr create` 명령을 사용하며, `--body`에 반드시 **`Closes #이슈번호`** 키워드를 포함합니다. (단, 기본 브랜치가 아닌 `dev`로 병합 시 자동 종료가 안 될 수 있습니다.)
+- **PR 승인 및 머지**: 사용자가 PR을 머지하거나 직접 머지(`gh pr merge`)한 직후, **이슈가 닫혔는지 확인하고 닫히지 않았다면 `gh issue close #이슈번호` 명령으로 수동 종료**해야 합니다.
+- **후속 작업**: 머지 완료 후 로컬의 `dev` 브랜치를 최신화(`git pull origin dev`) 한 뒤 다음 작업을 시작합니다.
 
 ---
 // turbo-all
