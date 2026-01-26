@@ -22,8 +22,9 @@ public class Solution {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(name = "problem_id", nullable = false)
-    private Integer problemId;
+    @ManyToOne
+    @JoinColumn(name = "problem_id", nullable = false)
+    private Problem problem;
 
     @Column(nullable = false, columnDefinition = "text")
     private String code;
