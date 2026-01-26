@@ -22,6 +22,8 @@ public class ProblemService {
         return problemRepository.findByBojId(bojId)
                 .map(existing -> {
                     existing.setTitle(scrapedProblem.getTitle());
+                    existing.setTier(scrapedProblem.getTier());
+                    existing.setCategory(scrapedProblem.getCategory());
                     existing.setDescription(scrapedProblem.getDescription());
                     existing.setInputDescription(scrapedProblem.getInputDescription());
                     existing.setOutputDescription(scrapedProblem.getOutputDescription());
