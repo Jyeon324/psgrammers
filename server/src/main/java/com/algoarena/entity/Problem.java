@@ -27,4 +27,16 @@ public class Problem {
 
     @Column(columnDefinition = "text")
     private String category;
+
+    @Column(columnDefinition = "text")
+    private String description;
+
+    @Column(name = "input_description", columnDefinition = "text")
+    private String inputDescription;
+
+    @Column(name = "output_description", columnDefinition = "text")
+    private String outputDescription;
+
+    @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<TestCase> testCases;
 }

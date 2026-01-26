@@ -1,6 +1,19 @@
-# Algo Arena (Code Manager)
+# AlgoArena - Code Manager
 
-Algo Arena is a web-based algorithm problem-solving platform. It provides a coding environment where users can solve problems, run their code against a compiler, and track their solutions.
+백준 온라인 저지(BOJ)와 연동되는 프리미엄 C++ 코딩 연습 플랫폼입니다.
+
+## 🚀 Git 브랜치 전략: GitHub Flow
+이 프로젝트는 **GitHub Flow**를 따릅니다.
+
+1. **`main`**: 상용(Production) 브랜치. 항상 배포 가능한 상태여야 합니다.
+2. **`dev`**: 개발(Development) 브랜치. 모든 개발의 기준점이 됩니다.
+3. **`feature/` or `fix/`**: 새로운 기능 개발이나 버그 수정을 위한 브랜치. 작업이 끝나면 `dev`로 PR을 보냅니다.
+
+**워크플로우:**
+1. GitHub Issue 생성
+2. `dev`에서 작업 브랜치 생성 (`feature/#번호`)
+3. 작업 완료 후 `dev` 브랜치로 Pull Request 생성
+4. 리뷰 및 병합 후 작업 브랜치 삭제
 
 ## 🛠 Tech Stack
 

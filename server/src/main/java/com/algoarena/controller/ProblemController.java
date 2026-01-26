@@ -14,6 +14,7 @@ import java.util.List;
 public class ProblemController {
 
     private final ProblemRepository problemRepository;
+    private final com.algoarena.service.ProblemService problemService;
 
     @GetMapping
     public List<Problem> getProblems() {
@@ -27,7 +28,9 @@ public class ProblemController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Solved.ac Sync logic could be added here if requested,
-    // for now we stick to basic CRUD as part of migration.
-    // Sync logic requires HTTP Client.
+    @PostMapping("/sync")
+    public ResponseEntity<Problem> syncProblem(@RequestBody com.algoarena.dto.SyncProblemRequest request)
+            throws java.io.IOException {
+        return ResponseEntity.ok(problemService.syncProblem(request.getBojId()));
+    }
 }

@@ -12,6 +12,17 @@ export const problems = pgTable("problems", {
   title: text("title").notNull(),
   tier: integer("tier").default(0), // Solved.ac tier
   category: text("category"), // JSON string or simple text tag
+  description: text("description"),
+  inputDescription: text("input_description"),
+  outputDescription: text("output_description"),
+});
+
+export const testCases = pgTable("test_cases", {
+  id: serial("id").primaryKey(),
+  problemId: integer("problem_id").references(() => problems.id).notNull(),
+  input: text("input").notNull(),
+  expectedOutput: text("output").notNull(),
+  sampleNumber: integer("sample_number"),
 });
 
 export const solutions = pgTable("solutions", {
@@ -31,8 +42,12 @@ export const insertSolutionSchema = createInsertSchema(solutions).omit({ id: tru
 
 // === EXPLICIT TYPES ===
 
-export type Problem = typeof problems.$inferSelect;
+export type Problem = typeof problems.$inferSelect & {
+  testCases?: TestCase[];
+};
 export type InsertProblem = z.infer<typeof insertProblemSchema>;
+
+export type TestCase = typeof testCases.$inferSelect;
 
 export type Solution = typeof solutions.$inferSelect;
 export type InsertSolution = z.infer<typeof insertSolutionSchema>;
