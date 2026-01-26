@@ -25,3 +25,8 @@ target/
 .env.local
 .DS_Store
 
+
+# Editors and Caches
+.local
+.vite
+
