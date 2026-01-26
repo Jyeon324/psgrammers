@@ -107,8 +107,10 @@ export function IDE({ problem }: IDEProps) {
     }
   };
 
-  const expectedOutput = problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase)?.expectedOutput;
-  const isCorrect = output.trim() === expectedOutput?.trim();
+  const currentTestCase = problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase);
+  const expectedOutput = currentTestCase?.expectedOutput;
+  const isInputMatched = customInput.trim() === currentTestCase?.input?.trim();
+  const isCorrect = isInputMatched && output.trim() === expectedOutput?.trim();
 
   return (
     <div className="h-[calc(100vh-2rem)] flex flex-col bg-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl border border-white/5">
@@ -252,7 +254,7 @@ export function IDE({ problem }: IDEProps) {
 
               {activeTab === 'output' && (
                 <div className="space-y-4">
-                  {output && expectedOutput && (
+                  {output && expectedOutput && isInputMatched && (
                     <div className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-lg border",
                       isCorrect
@@ -265,9 +267,16 @@ export function IDE({ problem }: IDEProps) {
                       </span>
                     </div>
                   )}
+                  {!isInputMatched && (
+                    <div className="bg-secondary/20 p-3 rounded border border-white/5 space-y-1">
+                      <div className="text-[10px] text-muted-foreground uppercase font-semibold">사용한 입력 (Current Input)</div>
+                      <pre className="text-xs font-mono text-muted-foreground truncate italic">{customInput || "(입력 없음)"}</pre>
+                    </div>
+                  )}
                   <div className="font-mono text-sm">
+                    <div className="text-[10px] text-muted-foreground uppercase mb-2 font-semibold">실행 결과 (Result)</div>
                     {output ? (
-                      <pre className="text-gray-300 whitespace-pre-wrap py-2">{output}</pre>
+                      <pre className="text-gray-300 whitespace-pre-wrap py-2 p-3 bg-black/20 rounded border border-white/5">{output}</pre>
                     ) : (
                       <div className="text-muted-foreground italic py-2">실행 버튼을 눌러 결과를 확인하세요...</div>
                     )}
