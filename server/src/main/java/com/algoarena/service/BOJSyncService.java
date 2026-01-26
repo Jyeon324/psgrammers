@@ -39,9 +39,32 @@ public class BOJSyncService {
         String inputDescription = doc.select("#problem_input").html();
         String outputDescription = doc.select("#problem_output").html();
 
+        // Fetch additional metadata from Solved.ac API
+        int tier = 0;
+        String category = "";
+        try {
+            String solvedApiUrl = "https://solved.ac/api/v3/problem/show?problemId=" + bojId;
+            String jsonResponse = Jsoup.connect(solvedApiUrl)
+                    .ignoreContentType(true)
+                    .execute()
+                    .body();
+
+            // Simple manual parsing to avoid adding new heavy dependencies if not needed
+            // However, since we have Jackson via spring-boot-starter-web, we could use it.
+            // For now, let's use a simple regex or just assume standard structure if we
+            // don't want to define DTOs yet.
+            // Better: use Jackson ObjectMapper which is available in Spring context.
+            tier = extractIntFromJson(jsonResponse, "level");
+            category = extractTagsFromJson(jsonResponse);
+        } catch (Exception e) {
+            System.err.println("Failed to fetch metadata from Solved.ac: " + e.getMessage());
+        }
+
         Problem problem = Problem.builder()
                 .bojId(bojId)
                 .title(title)
+                .tier(tier)
+                .category(category)
                 .description(description)
                 .inputDescription(inputDescription)
                 .outputDescription(outputDescription)
@@ -57,7 +80,6 @@ public class BOJSyncService {
                 break;
             }
 
-            // Using pure text and trimming to avoid hidden HTML or extra whitespace issues
             TestCase testCase = TestCase.builder()
                     .problem(problem)
                     .input(inputElem.text().trim())
@@ -68,5 +90,24 @@ public class BOJSyncService {
         }
 
         return problem;
+    }
+
+    private int extractIntFromJson(String json, String key) {
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\"" + key + "\":\\s*(\\d+)");
+        java.util.regex.Matcher matcher = pattern.matcher(json);
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(1));
+        }
+        return 0;
+    }
+
+    private String extractTagsFromJson(String json) {
+        List<String> tags = new ArrayList<>();
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\"key\":\\s*\"([^\"]+)\"");
+        java.util.regex.Matcher matcher = pattern.matcher(json);
+        while (matcher.find()) {
+            tags.add(matcher.group(1));
+        }
+        return String.join(",", tags);
     }
 }

@@ -20,6 +20,7 @@ import java.util.List;
 public class SolutionController {
 
     private final SolutionRepository solutionRepository;
+    private final com.algoarena.repository.ProblemRepository problemRepository;
     private final AuthService authService;
 
     @GetMapping
@@ -33,7 +34,7 @@ public class SolutionController {
 
         List<Solution> solutions;
         if (problemId != null) {
-            solutions = solutionRepository.findByUserIdAndProblemId(user.getId(), problemId);
+            solutions = solutionRepository.findByUserIdAndProblem_Id(user.getId(), problemId);
         } else {
             solutions = solutionRepository.findByUserId(user.getId());
         }
@@ -49,9 +50,16 @@ public class SolutionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        com.algoarena.entity.Problem problem = problemRepository.findById(request.getProblemId())
+                .orElse(null);
+
+        if (problem == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
         Solution solution = Solution.builder()
                 .userId(user.getId())
-                .problemId(request.getProblemId())
+                .problem(problem)
                 .code(request.getCode())
                 .language(request.getLanguage())
                 .status(request.getStatus() != null ? request.getStatus() : "solved")
