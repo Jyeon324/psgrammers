@@ -7,5 +7,5 @@ import java.util.List;
 public interface SolutionRepository extends JpaRepository<Solution, Integer> {
     List<Solution> findByUserId(String userId);
 
-    List<Solution> findByUserIdAndProblemId(String userId, Integer problemId);
+    List<Solution> findByUserIdAndProblem_Id(String userId, Integer problemId);
 }

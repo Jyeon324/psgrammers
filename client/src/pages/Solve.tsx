@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useProblem } from "@/hooks/use-problems";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -7,10 +7,31 @@ import { TierBadge } from "@/components/TierBadge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
 import { Link } from "wouter";
+import "katex/dist/katex.min.css";
+import renderMathInElement from "katex/dist/contrib/auto-render";
 
 export default function Solve() {
   const { id } = useParams();
   const { data: problem, isLoading, error } = useProblem(Number(id));
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (problem && containerRef.current) {
+      // Delay slightly to ensure dangerouslySetInnerHTML has finished
+      const timer = setTimeout(() => {
+        renderMathInElement(containerRef.current!, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false },
+            { left: "\\(", right: "\\)", display: false },
+            { left: "\\[", right: "\\]", display: true }
+          ],
+          throwOnError: false
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [problem]);
 
   if (isLoading) {
     return (
@@ -65,7 +86,7 @@ export default function Solve() {
 
           {/* Left: Problem Description */}
           <ResizablePanel defaultSize={40} minSize={20} className="bg-background">
-            <div className="h-full overflow-y-auto p-8 custom-scrollbar">
+            <div className="h-full overflow-y-auto p-8 custom-scrollbar" ref={containerRef}>
               <div className="prose prose-invert max-w-none prose-headings:font-bold prose-p:text-muted-foreground prose-code:text-primary prose-pre:bg-secondary/50">
                 <div className="flex items-center gap-2 mb-6">
                   <span className="font-mono text-sm text-muted-foreground">ID: {problem.bojId}</span>

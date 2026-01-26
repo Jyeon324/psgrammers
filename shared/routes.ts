@@ -46,6 +46,14 @@ export const api = {
         500: errorSchemas.internal,
       },
     },
+    delete: {
+      method: "DELETE" as const,
+      path: "/api/problems/:id",
+      responses: {
+        240: z.void(), // Changed from 204 because 204 is no content
+        404: errorSchemas.notFound,
+      },
+    },
   },
   solutions: {
     list: {
@@ -87,6 +95,10 @@ export const api = {
     },
   },
 };
+
+export type CompileRequest = z.infer<typeof api.compiler.run.input>;
+export type CreateSolutionRequest = z.infer<typeof api.solutions.create.input>;
+export type SyncProblemRequest = z.infer<typeof api.problems.sync.input>;
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {
   let url = path;
