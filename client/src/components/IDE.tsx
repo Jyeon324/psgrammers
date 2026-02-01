@@ -86,10 +86,6 @@ export function IDE({ problem }: IDEProps) {
       }
     }
     setIsRunningAll(false);
-    toast({
-      title: "전체 실행 완료",
-      description: "모든 예제에 대한 검증이 완료되었습니다.",
-    });
   };
 
   const handleSelectSample = (sampleNum: number) => {
@@ -98,10 +94,6 @@ export function IDE({ problem }: IDEProps) {
       setSelectedTestCase(sampleNum);
       setCustomInput(tc.input);
       setActiveTab('input');
-      toast({
-        title: `예제 ${sampleNum} 선택됨`,
-        description: "입력창이 예제 데이터로 업데이트되었습니다.",
-      });
     }
   };
 
