@@ -33,6 +33,8 @@ export function IDE({ problem }: IDEProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState<'output' | 'input' | 'samples'>('samples');
   const [customInput, setCustomInput] = useState("");
+  const [testResults, setTestResults] = useState<Record<number, { success: boolean; output: string } | null>>({});
+  const [isRunningAll, setIsRunningAll] = useState(false);
   const [selectedTestCase, setSelectedTestCase] = useState<number | null>(null);
 
   const editorRef = useRef<any>(null);
@@ -49,6 +51,45 @@ export function IDE({ problem }: IDEProps) {
 
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
+  };
+
+  const handleRunAll = async () => {
+    if (!problem.testCases || problem.testCases.length === 0) return;
+
+    setIsRunningAll(true);
+    setTestResults({});
+    setActiveTab('samples');
+
+    // 순차적으로 실행 (병렬 실행 시 서버 부하 고려)
+    for (const tc of problem.testCases) {
+      if (!tc.sampleNumber) continue;
+
+      try {
+        const result = await runCode.mutateAsync({
+          code,
+          language: "cpp",
+          input: tc.input || ""
+        });
+
+        const output = result.success ? (result.output || "") : (result.error || result.output || "실행 오류");
+        const isCorrect = output.trim() === tc.expectedOutput?.trim();
+
+        setTestResults(prev => ({
+          ...prev,
+          [tc.sampleNumber!]: { success: isCorrect, output }
+        }));
+      } catch (error) {
+        setTestResults(prev => ({
+          ...prev,
+          [tc.sampleNumber!]: { success: false, output: "에러: 실행 실패" }
+        }));
+      }
+    }
+    setIsRunningAll(false);
+    toast({
+      title: "전체 실행 완료",
+      description: "모든 예제에 대한 검증이 완료되었습니다.",
+    });
   };
 
   const handleSelectSample = (sampleNum: number) => {
@@ -126,9 +167,19 @@ export function IDE({ problem }: IDEProps) {
           <Button
             size="sm"
             variant="secondary"
+            className="h-8 bg-purple-600/10 text-purple-400 hover:bg-purple-600/20 border border-purple-600/20"
+            onClick={handleRunAll}
+            disabled={isRunning || isRunningAll || runCode.isPending}
+          >
+            {isRunningAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+            전체 실행
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
             className="h-8 bg-green-600/10 text-green-400 hover:bg-green-600/20 border border-green-600/20"
             onClick={handleRun}
-            disabled={isRunning || runCode.isPending}
+            disabled={isRunning || isRunningAll || runCode.isPending}
           >
             {isRunning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
             실행
@@ -212,17 +263,35 @@ export function IDE({ problem }: IDEProps) {
               {activeTab === 'samples' && (
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
-                    {problem.testCases?.map((tc: TestCase) => (
-                      <Button
-                        key={tc.sampleNumber}
-                        variant={selectedTestCase === tc.sampleNumber ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleSelectSample(tc.sampleNumber!)}
-                        className="font-mono"
-                      >
-                        예제 {tc.sampleNumber}
-                      </Button>
-                    ))}
+                    {problem.testCases?.map((tc: TestCase) => {
+                      const result = tc.sampleNumber ? testResults[tc.sampleNumber] : null;
+                      let statusColor = "bg-secondary text-secondary-foreground hover:bg-secondary/80";
+                      if (result) {
+                        statusColor = result.success
+                          ? "bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30"
+                          : "bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30";
+                      }
+
+                      return (
+                        <Button
+                          key={tc.sampleNumber}
+                          variant={selectedTestCase === tc.sampleNumber ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleSelectSample(tc.sampleNumber!)}
+                          className={cn("font-mono border transition-all",
+                            selectedTestCase === tc.sampleNumber ? "" : statusColor,
+                            result ? "border" : "border-transparent"
+                          )}
+                        >
+                          예제 {tc.sampleNumber}
+                          {result && (
+                            <span className="ml-2">
+                              {result.success ? "✅" : "❌"}
+                            </span>
+                          )}
+                        </Button>
+                      )
+                    })}
                   </div>
                   {selectedTestCase && (
                     <div className="grid grid-cols-2 gap-4 mt-4">
@@ -238,6 +307,17 @@ export function IDE({ problem }: IDEProps) {
                           {problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase)?.expectedOutput}
                         </pre>
                       </div>
+                    </div>
+                  )}
+                  {testResults[selectedTestCase!] && (
+                    <div className="mt-4 p-3 rounded border border-white/5 bg-black/20">
+                      <label className="text-[10px] text-muted-foreground uppercase block mb-2">실제 실행 결과</label>
+                      <pre className={cn(
+                        "text-xs font-mono whitespace-pre-wrap",
+                        testResults[selectedTestCase!]!.success ? "text-green-400" : "text-red-400"
+                      )}>
+                        {testResults[selectedTestCase!]?.output}
+                      </pre>
                     </div>
                   )}
                 </div>
