@@ -108,6 +108,8 @@ export function IDE({ problem }: IDEProps) {
   const handleRun = async () => {
     setIsRunning(true);
     setActiveTab('output');
+    setOutput(""); // 실행 시 이전 출력 초기화
+    setTestResults({}); // 이전 테스트 결과 초기화
     try {
       const result = await runCode.mutateAsync({
         code,
@@ -334,7 +336,7 @@ export function IDE({ problem }: IDEProps) {
 
               {activeTab === 'output' && (
                 <div className="space-y-4">
-                  {output && expectedOutput && isInputMatched && (
+                  {output && expectedOutput && isInputMatched && !isRunning && (
                     <div className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-lg border",
                       isCorrect
