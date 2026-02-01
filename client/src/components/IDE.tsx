@@ -67,6 +67,7 @@ export function IDE({ problem }: IDEProps) {
   const handleRun = async () => {
     setIsRunning(true);
     setActiveTab('output');
+    setOutput(""); // 실행 시 이전 출력 초기화
     try {
       const result = await runCode.mutateAsync({
         code,

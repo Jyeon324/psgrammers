@@ -42,5 +42,6 @@ public class Problem {
     private java.util.List<TestCase> testCases;
 
     @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private java.util.List<Solution> solutions;
 }

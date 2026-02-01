@@ -25,7 +25,6 @@ public class Solution {
 
     @ManyToOne
     @JoinColumn(name = "problem_id", nullable = false)
-    @JsonIgnore
     private Problem problem;
 
     @Column(nullable = false, columnDefinition = "text")
