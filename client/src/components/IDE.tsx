@@ -93,7 +93,7 @@ export function IDE({ problem }: IDEProps) {
     if (tc) {
       setSelectedTestCase(sampleNum);
       setCustomInput(tc.input);
-      setActiveTab('input');
+      // setActiveTab('input'); // Removed to prevent auto-switching
     }
   };
 
