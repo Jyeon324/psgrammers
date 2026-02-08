@@ -361,14 +361,48 @@ export function IDE({ problem }: IDEProps) {
                       <pre className="text-xs font-mono text-muted-foreground truncate italic">{customInput || "(입력 없음)"}</pre>
                     </div>
                   )}
-                  <div className="font-mono text-sm">
-                    <div className="text-[10px] text-muted-foreground uppercase mb-2 font-semibold">실행 결과 (Result)</div>
-                    {output ? (
-                      <pre className="text-gray-300 whitespace-pre-wrap py-2 p-3 bg-black/20 rounded border border-white/5">{output}</pre>
-                    ) : (
-                      <div className="text-muted-foreground italic py-2">실행 버튼을 눌러 결과를 확인하세요...</div>
-                    )}
-                  </div>
+                  {expectedOutput ? (
+                    <div className="grid grid-cols-2 gap-4 font-mono">
+                      <div className="space-y-2">
+                        <label className="text-[10px] text-muted-foreground uppercase font-semibold">예상 결과 (Expected Output)</label>
+                        <pre className="p-4 pb-8 bg-black/50 rounded-md border border-white/10 text-xs font-mono whitespace-pre-wrap text-green-400/80">
+                          {expectedOutput}
+                        </pre>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] text-muted-foreground uppercase font-semibold">실행 결과 (Actual Result)</label>
+                        {isRunning ? (
+                          <div className="p-4 pb-8 bg-black/50 rounded-md border border-white/10 text-xs font-mono text-muted-foreground flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>실행 중...</span>
+                          </div>
+                        ) : (
+                          <pre className={cn(
+                            "p-4 pb-8 bg-black/50 rounded-md border border-white/10 text-xs font-mono whitespace-pre-wrap",
+                            isCorrect ? "text-green-400" : "text-red-400"
+                          )}>
+                            {output || "(결과 없음)"}
+                          </pre>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="font-mono text-sm">
+                      <div className="text-[10px] text-muted-foreground uppercase mb-2 font-semibold">실행 결과 (Result)</div>
+                      {isRunning ? (
+                        <div className="p-4 pb-8 bg-black/50 rounded-md border border-white/10 text-xs font-mono text-muted-foreground flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>실행 중...</span>
+                        </div>
+                      ) : output ? (
+                        <pre className="p-4 pb-8 bg-black/50 rounded-md border border-white/10 text-xs font-mono whitespace-pre-wrap text-gray-300">
+                          {output}
+                        </pre>
+                      ) : (
+                        <div className="text-muted-foreground italic py-2">실행 버튼을 눌러 결과를 확인하세요...</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </ScrollArea>
