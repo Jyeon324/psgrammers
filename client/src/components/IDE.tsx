@@ -27,6 +27,18 @@ int main() {
 }
 `;
 
+// Output normalization function to relax comparison (ignore trailing whitespace and extra newlines)
+const normalizeOutput = (str: string | null | undefined) => {
+  if (!str) return "";
+  return str
+    .trim()
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map(line => line.trimEnd()) // Remove trailing whitespace from each line
+    .filter(line => line.trim() !== "") // Remove empty lines
+    .join('\n');
+};
+
 export function IDE({ problem }: IDEProps) {
   const [code, setCode] = useState(DEFAULT_CODE);
   const [output, setOutput] = useState("");
@@ -72,7 +84,7 @@ export function IDE({ problem }: IDEProps) {
         });
 
         const output = result.success ? (result.output || "") : (result.error || result.output || "실행 오류");
-        const isCorrect = output.trim() === tc.expectedOutput?.trim();
+        const isCorrect = normalizeOutput(output) === normalizeOutput(tc.expectedOutput);
 
         setTestResults(prev => ({
           ...prev,
@@ -147,7 +159,7 @@ export function IDE({ problem }: IDEProps) {
   const isInputMatched = customInput.trim() === currentTestCase?.input?.trim();
 
   const isError = output.startsWith("에러:") || output === "실행 오류" || output.includes("Error:") || output.includes("RuntimeException");
-  const isCorrect = !isError && isInputMatched && output.trim() === expectedOutput?.trim();
+  const isCorrect = !isError && isInputMatched && normalizeOutput(output) === normalizeOutput(expectedOutput);
 
   return (
     <div className="h-[calc(100vh-2rem)] flex flex-col bg-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl border border-white/5">
