@@ -152,7 +152,7 @@ export default function Solve() {
           {/* Right: IDE */}
           <ResizablePanel defaultSize={60} minSize={30}>
             <div className="h-full p-2 bg-[#121212]">
-              <IDE problem={problem} />
+              <IDE key={problem.id} problem={problem} />
             </div>
           </ResizablePanel>
 

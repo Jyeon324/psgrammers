@@ -40,7 +40,17 @@ const normalizeOutput = (str: string | null | undefined) => {
 };
 
 export function IDE({ problem }: IDEProps) {
-  const [code, setCode] = useState(DEFAULT_CODE);
+  // Load initial code from localStorage or use default
+  const [code, setCode] = useState(() => {
+    const savedCode = localStorage.getItem(`problem_code_${problem.id}`);
+    return savedCode || DEFAULT_CODE;
+  });
+
+  // Auto-save code to localStorage immediately to prevent data loss
+  useEffect(() => {
+    localStorage.setItem(`problem_code_${problem.id}`, code);
+  }, [code, problem.id]);
+
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [activeTab, setActiveTab] = useState<'output' | 'input' | 'samples'>('samples');
