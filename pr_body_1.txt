@@ -1,0 +1,10 @@
+## 변경 사항 (Changes)
+- `handleRun` 함수 시작 시 `setOutput("")` 외에 `setTestResults({})`를 호출하여 이전 실행 결과와 테스트 상태를 모두 초기화합니다.
+- 결과 비교 UI(CheckCircle2/AlertCircle)가 `!isRunning` 조건일 때만 렌더링되도록 수정했습니다.
+
+## 해결된 문제 (Resolved Issues)
+- 런타임 중 이전 결과가 화면에 남아 사용자에게 혼란을 주는 문제를 해결했습니다.
+- 재실행 시 이전의 성공/실패 상태가 즉시 사라집니다.
+
+## 관련 이슈 (Related Issue)
+- Closes #23

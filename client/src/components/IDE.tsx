@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
-import { Loader2, Play, Save, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Play, Save, CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
 import { useRunCode } from "@/hooks/use-compiler";
 import { useCreateSolution } from "@/hooks/use-solutions";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -145,7 +145,9 @@ export function IDE({ problem }: IDEProps) {
   const currentTestCase = problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase);
   const expectedOutput = currentTestCase?.expectedOutput;
   const isInputMatched = customInput.trim() === currentTestCase?.input?.trim();
-  const isCorrect = isInputMatched && output.trim() === expectedOutput?.trim();
+
+  const isError = output.startsWith("에러:") || output === "실행 오류" || output.includes("Error:") || output.includes("RuntimeException");
+  const isCorrect = !isError && isInputMatched && output.trim() === expectedOutput?.trim();
 
   return (
     <div className="h-[calc(100vh-2rem)] flex flex-col bg-[#1e1e1e] rounded-xl overflow-hidden shadow-2xl border border-white/5">
@@ -331,13 +333,25 @@ export function IDE({ problem }: IDEProps) {
                   {output && expectedOutput && isInputMatched && !isRunning && (
                     <div className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-lg border",
-                      isCorrect
-                        ? "bg-green-500/10 border-green-500/20 text-green-400"
-                        : "bg-red-500/10 border-red-500/20 text-red-400"
+                      isError
+                        ? "bg-red-500/20 border-red-500/40 text-red-400"
+                        : isCorrect
+                          ? "bg-green-500/10 border-green-500/20 text-green-400"
+                          : "bg-orange-500/10 border-orange-500/20 text-orange-400"
                     )}>
-                      {isCorrect ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                      {isError ? (
+                        <AlertTriangle className="w-4 h-4" />
+                      ) : isCorrect ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4" />
+                      )}
                       <span className="text-sm font-medium">
-                        {isCorrect ? "결과가 일치합니다!" : "결과가 다릅니다."}
+                        {isError
+                          ? "런타임 에러 또는 실행 실패"
+                          : isCorrect
+                            ? "결과가 일치합니다!"
+                            : "결과가 다릅니다."}
                       </span>
                     </div>
                   )}
