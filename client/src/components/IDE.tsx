@@ -257,7 +257,7 @@ export function IDE({ problem }: IDEProps) {
 
             <ScrollArea className="flex-1 p-4">
               {activeTab === 'samples' && (
-                <div className="space-y-4">
+                <div className="space-y-4 pb-8">
                   <div className="flex flex-wrap gap-2">
                     {problem.testCases?.map((tc: TestCase) => {
                       const result = tc.sampleNumber ? testResults[tc.sampleNumber] : null;
@@ -293,13 +293,13 @@ export function IDE({ problem }: IDEProps) {
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div className="space-y-2">
                         <label className="text-[10px] text-muted-foreground uppercase">예제 입력</label>
-                        <pre className="p-3 bg-black/30 rounded border border-white/5 text-xs font-mono overflow-x-auto">
+                        <pre className="p-4 bg-black/50 rounded-md border border-white/10 text-xs font-mono whitespace-pre-wrap">
                           {problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase)?.input}
                         </pre>
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] text-muted-foreground uppercase">예상 출력</label>
-                        <pre className="p-3 bg-black/30 rounded border border-white/5 text-xs font-mono overflow-x-auto text-green-400/80">
+                        <pre className="p-4 bg-black/50 rounded-md border border-white/10 text-xs font-mono whitespace-pre-wrap text-green-400/80">
                           {problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase)?.expectedOutput}
                         </pre>
                       </div>
