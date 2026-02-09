@@ -44,7 +44,7 @@ public class CompilerService {
                 Files.writeString(sourcePath, code);
 
                 // Compile C++
-                ProcessBuilder pb = new ProcessBuilder("/usr/bin/g++", sourcePath.toString(), "-o",
+                ProcessBuilder pb = new ProcessBuilder("g++", sourcePath.toString(), "-o",
                         binaryPath.toString());
                 pb.redirectErrorStream(true);
                 Process process = pb.start();

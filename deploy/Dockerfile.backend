@@ -20,8 +20,8 @@ FROM amazoncorretto:17-alpine-jdk
 WORKDIR /app
 
 # Create a non-root user for security
-# Install g++ and build-base for C++ compilation
-RUN apk add --no-cache g++ build-base python3
+# Install g++ and build-base for C++ compilation, and nodejs for JS
+RUN apk add --no-cache g++ build-base python3 nodejs npm
 
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
