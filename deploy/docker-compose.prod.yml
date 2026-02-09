@@ -1,0 +1,46 @@
+services:
+  psgrammers-db:
+    image: postgres:16
+    container_name: psgrammers-db-prod
+    environment:
+      POSTGRES_DB: psgrammers
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ~/projects/psgrammers/data:/var/lib/postgresql/data
+    networks:
+      - psgrammers-net
+    restart: always
+
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    container_name: psgrammers-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://psgrammers-db:5432/psgrammers
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      # CORS configuration if needed, though Nginx proxy handles it mostly
+    depends_on:
+      - psgrammers-db
+    networks:
+      - psgrammers-net
+    restart: always
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    container_name: psgrammers-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - psgrammers-net
+    restart: always
+
+networks:
+  psgrammers-net:
+    driver: bridge
