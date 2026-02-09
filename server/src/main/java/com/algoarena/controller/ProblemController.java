@@ -37,6 +37,11 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.syncProblem(request.getBojId()));
     }
 
+    @PostMapping("/import")
+    public ResponseEntity<Problem> importProblem(@RequestBody Problem problem) {
+        return ResponseEntity.ok(problemService.saveProblem(problem));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProblem(@PathVariable Integer id) {
         problemRepository.deleteById(id);
