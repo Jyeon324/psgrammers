@@ -18,7 +18,7 @@ export function useProblems(filters?: { search?: string; category?: string; tier
       if (!res.ok) throw new Error("Failed to fetch problems");
 
       const data = await res.json();
-      return data as Problem[];
+      return api.problems.list.responses[200].parse(data);
     },
   });
 }
@@ -33,7 +33,7 @@ export function useProblem(id: number) {
       if (!res.ok) throw new Error("Failed to fetch problem");
 
       const data = await res.json();
-      return data as Problem;
+      return api.problems.get.responses[200].parse(data);
     },
     enabled: !!id,
   });

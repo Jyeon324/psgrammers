@@ -27,17 +27,17 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      
+
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} />
       </Route>
-      
+
       <Route path="/problems">
         <ProtectedRoute component={Problems} />
       </Route>
-      
+
       <Route path="/solve/:id" component={Solve} />
-      
+
       <Route path="/solutions">
         <ProtectedRoute component={Solutions} />
       </Route>
