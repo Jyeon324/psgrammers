@@ -1,19 +1,21 @@
-# Environment Variables Guide
+# 환경 변수 가이드 (Environment Variables Guide)
 
-## 1. Local Development (No .env needed)
-- We use default values in `application.properties`.
-- Example: `spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:postgres}`
-- This means if `SPRING_DATASOURCE_PASSWORD` (env var) is not set, it uses `postgres` (default).
+## 1. 로컬 개발 환경 (Local Development)
+- **별도의 `.env` 파일이 필요 없습니다.**
+- `application.properties`에 설정된 기본값(`postgres`)을 자동으로 사용합니다.
+- 예시: `spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:postgres}`
+    - 이 설정은 환경변수가 없으면 `postgres`를 사용한다는 뜻입니다.
 
-## 2. Production Server (Oracle Cloud)
-- **DO NOT** edit code or properties files on the server.
-- Instead, create a `.env` file in the `deploy` folder.
-- Use `deploy/.env.example` as a template.
+## 2. 배포 서버 (Production Server - Oracle Cloud)
+- **서버에서 코드를 직접 수정하지 마세요.**
+- 대신, `deploy` 폴더 안에 `.env` 파일을 새로 만들어야 합니다.
+- `deploy/.env.example` 파일을 복사해서 사용하면 됩니다.
 
-### How to set up on server:
+### 서버 설정 방법:
 ```bash
 cd ~/psgrammers/deploy
 cp .env.example .env
 vim .env
-# Edit POSTGRES_PASSWORD to a strong password
+# POSTGRES_PASSWORD 값을 강력한 비밀번호로 변경하세요!
+# (변경 후 ESC -> :wq 로 저장)
 ```
