@@ -14,7 +14,7 @@ import java.util.Map;
 @Service
 public class BOJSyncService {
 
-    @Value("${app.bridge.url:https://psgrammers-bridge.vercel.app/api/scrape?id=}")
+    @Value("${app.bridge.url:https://psgrammers.vercel.app/api/scrape?id=}")
     private String bridgeUrl;
 
     public Problem scrapeProblem(int bojId) throws IOException {
