@@ -3,11 +3,21 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package files for caching
-COPY client/package*.json ./
+# Copy package files for caching (mirroring directory structure)
+COPY client/package*.json client/
+WORKDIR /app/client
 RUN npm ci
 
+# Move back to root to copy shared files
+WORKDIR /app
+
 # Copy source code and build
-COPY client/ .
+# Copy shared directory (required for build)
+COPY shared shared
+
+# Copy source code and build
+COPY client/ client/
+WORKDIR /app/client
 RUN npm run build
 
 # Run Stage (Nginx)
