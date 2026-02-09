@@ -23,9 +23,11 @@ public class ProblemController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Problem> getProblem(@PathVariable Integer id) {
-        return problemRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return ResponseEntity.ok(problemService.getOrScrapeProblem(id));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("/sync")

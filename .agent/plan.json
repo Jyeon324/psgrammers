@@ -1,0 +1,25 @@
+{
+  "tasks": [
+    {
+      "id": "backend-scraping",
+      "type": "backend",
+      "priority": "P0",
+      "description": "Implement auto-scraping in ProblemService.java and update ProblemController.java to use it.",
+      "dependencies": []
+    },
+    {
+      "id": "frontend-renewal",
+      "type": "frontend",
+      "priority": "P0",
+      "description": "Create Home.tsx based on HomeBOJ.tsx style and update App.tsx to use it as the main page.",
+      "dependencies": []
+    },
+    {
+      "id": "qa-verification",
+      "type": "qa",
+      "priority": "P1",
+      "description": "Verify auto-scraping flow and frontend navigation.",
+      "dependencies": ["backend-scraping", "frontend-renewal"]
+    }
+  ]
+}
