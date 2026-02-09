@@ -51,4 +51,32 @@ public class ProblemService {
                     }
                 });
     }
+
+    @Transactional
+    public Problem saveProblem(Problem problem) {
+        // Ensure test cases have back-reference to problem
+        if (problem.getTestCases() != null) {
+            problem.getTestCases().forEach(tc -> tc.setProblem(problem));
+        }
+
+        return problemRepository.findByBojId(problem.getBojId())
+                .map(existing -> {
+                    existing.setTitle(problem.getTitle());
+                    existing.setTier(problem.getTier());
+                    existing.setCategory(problem.getCategory());
+                    existing.setDescription(problem.getDescription());
+                    existing.setInputDescription(problem.getInputDescription());
+                    existing.setOutputDescription(problem.getOutputDescription());
+
+                    existing.getTestCases().clear();
+                    if (problem.getTestCases() != null) {
+                        problem.getTestCases().forEach(tc -> {
+                            tc.setProblem(existing);
+                            existing.getTestCases().add(tc);
+                        });
+                    }
+                    return problemRepository.save(existing);
+                })
+                .orElseGet(() -> problemRepository.save(problem));
+    }
 }

@@ -26,6 +26,7 @@ public class ProblemController {
         try {
             return ResponseEntity.ok(problemService.getOrScrapeProblem(id));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.notFound().build();
         }
     }
@@ -34,6 +35,11 @@ public class ProblemController {
     public ResponseEntity<Problem> syncProblem(@RequestBody com.algoarena.dto.SyncProblemRequest request)
             throws java.io.IOException {
         return ResponseEntity.ok(problemService.syncProblem(request.getBojId()));
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<Problem> importProblem(@RequestBody Problem problem) {
+        return ResponseEntity.ok(problemService.saveProblem(problem));
     }
 
     @DeleteMapping("/{id}")
