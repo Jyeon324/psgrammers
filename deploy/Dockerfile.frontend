@@ -18,6 +18,8 @@ COPY shared shared
 # Copy source code and build
 COPY client/ client/
 WORKDIR /app/client
+# Link node_modules to root so shared/ can resolve dependencies
+RUN ln -s /app/client/node_modules /app/node_modules
 RUN npm run build
 
 # Run Stage (Nginx)
