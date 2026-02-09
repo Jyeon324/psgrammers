@@ -26,6 +26,7 @@ public class ProblemController {
         try {
             return ResponseEntity.ok(problemService.getOrScrapeProblem(id));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.notFound().build();
         }
     }
