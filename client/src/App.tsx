@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import NotFound from "@/pages/not-found";
 
 // Pages
-import Landing from "@/pages/Landing";
+import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
 import Problems from "@/pages/Problems";
 import Solve from "@/pages/Solve";
@@ -26,7 +26,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Landing} />
+      <Route path="/" component={Home} />
       
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} />
@@ -36,9 +36,7 @@ function Router() {
         <ProtectedRoute component={Problems} />
       </Route>
       
-      <Route path="/solve/:id">
-        <ProtectedRoute component={Solve} />
-      </Route>
+      <Route path="/solve/:id" component={Solve} />
       
       <Route path="/solutions">
         <ProtectedRoute component={Solutions} />

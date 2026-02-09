@@ -39,4 +39,16 @@ public class ProblemService {
                 })
                 .orElseGet(() -> problemRepository.save(scrapedProblem));
     }
+
+    @Transactional
+    public Problem getOrScrapeProblem(int bojId) {
+        return problemRepository.findByBojId(bojId)
+                .orElseGet(() -> {
+                    try {
+                        return syncProblem(bojId);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to scrape problem " + bojId, e);
+                    }
+                });
+    }
 }
