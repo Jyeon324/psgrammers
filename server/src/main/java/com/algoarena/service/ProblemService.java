@@ -39,21 +39,6 @@ public class ProblemService {
                 });
     }
 
-    @Transactional
-    public Problem saveProblem(Problem problem) {
-        // Ensure test cases have back-reference to problem
-        if (problem.getTestCases() != null) {
-            problem.getTestCases().forEach(tc -> tc.setProblem(problem));
-        }
-
-        return problemRepository.findByBojId(problem.getBojId())
-                .map(existing -> {
-                    updateProblemFields(existing, problem);
-                    return problemRepository.save(existing);
-                })
-                .orElseGet(() -> problemRepository.save(problem));
-    }
-
     private void updateProblemFields(Problem existing, Problem source) {
         existing.setTitle(source.getTitle());
         existing.setTier(source.getTier());

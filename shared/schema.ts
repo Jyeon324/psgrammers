@@ -1,7 +1,5 @@
-import { pgTable, text, serial, integer, timestamp, varchar, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
-import { users } from "./models/auth";
 export * from "./models/auth";
 
 // === TABLE DEFINITIONS ===
@@ -37,7 +35,6 @@ export const solutions = pgTable("solutions", {
 
 // === SCHEMAS ===
 
-export const insertProblemSchema = createInsertSchema(problems).omit({ id: true });
 export const insertSolutionSchema = createInsertSchema(solutions).omit({ id: true, createdAt: true });
 
 // === EXPLICIT TYPES ===
@@ -45,9 +42,7 @@ export const insertSolutionSchema = createInsertSchema(solutions).omit({ id: tru
 export type Problem = typeof problems.$inferSelect & {
   testCases?: TestCase[];
 };
-export type InsertProblem = z.infer<typeof insertProblemSchema>;
 
 export type TestCase = typeof testCases.$inferSelect;
 
 export type Solution = typeof solutions.$inferSelect;
-export type InsertSolution = z.infer<typeof insertSolutionSchema>;
