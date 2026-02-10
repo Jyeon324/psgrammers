@@ -17,11 +17,16 @@ public class BOJSyncService {
     @Value("${app.bridge.url:https://psgrammers.vercel.app/api/scrape?id=}")
     private String bridgeUrl;
 
+    private final RestTemplate restTemplate;
+
+    public BOJSyncService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
     public Problem scrapeProblem(int bojId) throws IOException {
         String url = bridgeUrl + bojId;
 
         try {
-            RestTemplate restTemplate = new RestTemplate();
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
 

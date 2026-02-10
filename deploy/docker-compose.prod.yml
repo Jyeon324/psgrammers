@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ~/projects/psgrammers/data:/var/lib/postgresql/data
+      - ${DATA_DIR:-./data}:/var/lib/postgresql/data
     networks:
       - app-network
     restart: always
