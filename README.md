@@ -1,6 +1,6 @@
 # AlgoArena - Code Manager
 
-백준 온라인 저지(BOJ)와 연동되는 C++ / Python / JavaScript 코딩 연습 플랫폼입니다.
+백준 온라인 저지(BOJ)와 연동되는 C++ / Java / Python / JavaScript 코딩 연습 플랫폼입니다.
 BOJ 문제를 자동으로 스크래핑하여 웹 IDE에서 직접 풀고, 예제 테스트케이스로 검증할 수 있습니다.
 
 ---
@@ -44,7 +44,7 @@ graph TB
     Sync -->|HTTP| Bridge
     Bridge -->|HTML 파싱| BOJ
     PS -->|저장| DB
-    CS -->|g++ / python3 / node| CS
+    CS -->|g++ / javac / python3 / node| CS
 
     Nginx -->|정적 파일| Client
     Nginx -->|/api 프록시| Server
@@ -83,7 +83,7 @@ sequenceDiagram
 
     User->>Solve: 코드 작성 후 실행 클릭
     Solve->>API: POST /api/compiler/run {code, language, input}
-    API->>API: 컴파일 & 실행 (g++/python3/node)
+    API->>API: 컴파일 & 실행 (g++/javac/python3/node)
     API-->>Solve: {output, success}
     Solve->>User: 실행 결과 표시 + 정답 비교
 ```
@@ -156,7 +156,7 @@ psgrammers/
 │   └── routes.ts                    # API 경로 정의
 │
 ├── deploy/                          # 프로덕션 배포 설정
-│   ├── Dockerfile.backend           # Spring Boot + g++/python3/node 포함
+│   ├── Dockerfile.backend           # Spring Boot + g++/javac/python3/node 포함
 │   ├── Dockerfile.frontend          # Vite 빌드 → nginx 서빙
 │   ├── docker-compose.prod.yml      # DB + Backend + Frontend 풀스택 구성
 │   ├── nginx.conf                   # SPA 라우팅 + /api 리버스 프록시
@@ -220,8 +220,8 @@ npm run dev
 ## 🧪 Key Features
 
 - **BOJ 문제 동기화**: 백준 문제 번호를 입력하면 자동으로 문제/테스트케이스를 스크래핑
-- **웹 IDE**: Monaco Editor 기반 C++, Python, JavaScript 코드 편집
-- **코드 컴파일 & 실행**: 서버에서 `g++`, `python3`, `node`를 사용하여 안전하게 실행
+- **웹 IDE**: Monaco Editor 기반 C++, Java, Python, JavaScript 코드 편집
+- **코드 컴파일 & 실행**: 서버에서 `g++`, `javac`, `python3`, `node`를 사용하여 안전하게 실행
 - **예제 테스트**: 스크래핑된 예제 입출력으로 자동 정답 비교
 
 ---
@@ -281,5 +281,5 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 배포 구성:
 - **Frontend**: Vite 빌드 → nginx (SPA 라우팅 + API 리버스 프록시)
-- **Backend**: Spring Boot JAR + g++/python3/node 런타임 포함
+- **Backend**: Spring Boot JAR + g++/javac/python3/node 런타임 포함
 - **Database**: PostgreSQL 16 (볼륨 마운트로 데이터 영속화)
