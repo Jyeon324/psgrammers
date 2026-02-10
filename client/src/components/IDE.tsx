@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
-import { Loader2, Play, Save, CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Loader2, Play, Save, CheckCircle2, AlertCircle, AlertTriangle, ChevronDown } from "lucide-react";
 import { useRunCode } from "@/hooks/use-compiler";
 import { useCreateSolution } from "@/hooks/use-solutions";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,7 +14,14 @@ interface IDEProps {
   problem: Problem;
 }
 
-const DEFAULT_CODE = `#include <iostream>
+type SupportedLanguage = "cpp" | "python" | "javascript";
+
+const LANGUAGE_CONFIG: Record<SupportedLanguage, { label: string; monacoId: string; extension: string; defaultCode: string }> = {
+  cpp: {
+    label: "C++",
+    monacoId: "cpp",
+    extension: "cpp",
+    defaultCode: `#include <iostream>
 #include <string>
 #include <vector>
 
@@ -25,7 +32,35 @@ int main() {
     cout << "Hello World!" << endl;
     return 0;
 }
-`;
+`,
+  },
+  python: {
+    label: "Python",
+    monacoId: "python",
+    extension: "py",
+    defaultCode: `import sys
+input = sys.stdin.readline
+
+# Write your code here
+print("Hello World!")
+`,
+  },
+  javascript: {
+    label: "JavaScript",
+    monacoId: "javascript",
+    extension: "js",
+    defaultCode: `const readline = require('readline');
+const rl = readline.createInterface({ input: process.stdin });
+const lines = [];
+
+rl.on('line', (line) => lines.push(line));
+rl.on('close', () => {
+    // Write your code here
+    console.log("Hello World!");
+});
+`,
+  },
+};
 
 // Output normalization function to relax comparison (ignore trailing whitespace and extra newlines)
 const normalizeOutput = (str: string | null | undefined) => {
@@ -40,16 +75,34 @@ const normalizeOutput = (str: string | null | undefined) => {
 };
 
 export function IDE({ problem }: IDEProps) {
-  // Load initial code from localStorage or use default
+  const [language, setLanguage] = useState<SupportedLanguage>(() => {
+    const saved = localStorage.getItem(`problem_lang_${problem.id}`);
+    return (saved as SupportedLanguage) || "cpp";
+  });
+  const [showLangMenu, setShowLangMenu] = useState(false);
+
+  const langConfig = LANGUAGE_CONFIG[language];
+
   const [code, setCode] = useState(() => {
-    const savedCode = localStorage.getItem(`problem_code_${problem.id}`);
-    return savedCode || DEFAULT_CODE;
+    const savedCode = localStorage.getItem(`problem_code_${problem.id}_${language}`);
+    return savedCode || langConfig.defaultCode;
   });
 
-  // Auto-save code to localStorage immediately to prevent data loss
   useEffect(() => {
-    localStorage.setItem(`problem_code_${problem.id}`, code);
-  }, [code, problem.id]);
+    localStorage.setItem(`problem_code_${problem.id}_${language}`, code);
+  }, [code, problem.id, language]);
+
+  useEffect(() => {
+    localStorage.setItem(`problem_lang_${problem.id}`, language);
+  }, [language, problem.id]);
+
+  const handleLanguageChange = (newLang: SupportedLanguage) => {
+    if (newLang === language) return;
+    const savedCode = localStorage.getItem(`problem_code_${problem.id}_${newLang}`);
+    setCode(savedCode || LANGUAGE_CONFIG[newLang].defaultCode);
+    setLanguage(newLang);
+    setShowLangMenu(false);
+  };
 
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
@@ -89,7 +142,7 @@ export function IDE({ problem }: IDEProps) {
       try {
         const result = await runCode.mutateAsync({
           code,
-          language: "cpp",
+          language,
           input: tc.input || ""
         });
 
@@ -127,7 +180,7 @@ export function IDE({ problem }: IDEProps) {
     try {
       const result = await runCode.mutateAsync({
         code,
-        language: "cpp",
+        language,
         input: customInput
       });
 
@@ -148,8 +201,8 @@ export function IDE({ problem }: IDEProps) {
       await createSolution.mutateAsync({
         problemId: problem.id,
         code,
-        language: "cpp",
-        status: "pending" // In a real app, this would trigger a judge
+        language,
+        status: "pending"
       });
       toast({
         title: "Solution Saved",
@@ -176,8 +229,31 @@ export function IDE({ problem }: IDEProps) {
       {/* Toolbar */}
       <div className="h-14 bg-[#252526] border-b border-white/5 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded text-xs font-mono border border-blue-500/20">
-            main.cpp
+          <div className="relative">
+            <button
+              onClick={() => setShowLangMenu(!showLangMenu)}
+              className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded text-xs font-mono border border-blue-500/20 flex items-center gap-1.5 hover:bg-blue-500/20 transition-colors"
+            >
+              main.{langConfig.extension}
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            {showLangMenu && (
+              <div className="absolute top-full left-0 mt-1 bg-[#252526] border border-white/10 rounded-md shadow-xl z-50 min-w-[140px]">
+                {(Object.entries(LANGUAGE_CONFIG) as [SupportedLanguage, typeof langConfig][]).map(([key, config]) => (
+                  <button
+                    key={key}
+                    onClick={() => handleLanguageChange(key)}
+                    className={cn(
+                      "w-full px-3 py-2 text-left text-xs font-mono hover:bg-white/10 transition-colors flex items-center justify-between",
+                      key === language ? "text-blue-400" : "text-gray-300"
+                    )}
+                  >
+                    <span>{config.label}</span>
+                    <span className="text-muted-foreground">.{config.extension}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           {createSolution.isPending && <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>}
         </div>
@@ -219,7 +295,7 @@ export function IDE({ problem }: IDEProps) {
         <ResizablePanel defaultSize={65}>
           <Editor
             height="100%"
-            defaultLanguage="cpp"
+            language={langConfig.monacoId}
             theme="vs-dark"
             value={code}
             onChange={(value) => setCode(value || "")}

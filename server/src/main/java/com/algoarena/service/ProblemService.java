@@ -21,20 +21,7 @@ public class ProblemService {
 
         return problemRepository.findByBojId(bojId)
                 .map(existing -> {
-                    existing.setTitle(scrapedProblem.getTitle());
-                    existing.setTier(scrapedProblem.getTier());
-                    existing.setCategory(scrapedProblem.getCategory());
-                    existing.setDescription(scrapedProblem.getDescription());
-                    existing.setInputDescription(scrapedProblem.getInputDescription());
-                    existing.setOutputDescription(scrapedProblem.getOutputDescription());
-
-                    // Update test cases
-                    existing.getTestCases().clear();
-                    scrapedProblem.getTestCases().forEach(tc -> {
-                        tc.setProblem(existing);
-                        existing.getTestCases().add(tc);
-                    });
-
+                    updateProblemFields(existing, scrapedProblem);
                     return problemRepository.save(existing);
                 })
                 .orElseGet(() -> problemRepository.save(scrapedProblem));
@@ -52,31 +39,20 @@ public class ProblemService {
                 });
     }
 
-    @Transactional
-    public Problem saveProblem(Problem problem) {
-        // Ensure test cases have back-reference to problem
-        if (problem.getTestCases() != null) {
-            problem.getTestCases().forEach(tc -> tc.setProblem(problem));
+    private void updateProblemFields(Problem existing, Problem source) {
+        existing.setTitle(source.getTitle());
+        existing.setTier(source.getTier());
+        existing.setCategory(source.getCategory());
+        existing.setDescription(source.getDescription());
+        existing.setInputDescription(source.getInputDescription());
+        existing.setOutputDescription(source.getOutputDescription());
+
+        existing.getTestCases().clear();
+        if (source.getTestCases() != null) {
+            source.getTestCases().forEach(tc -> {
+                tc.setProblem(existing);
+                existing.getTestCases().add(tc);
+            });
         }
-
-        return problemRepository.findByBojId(problem.getBojId())
-                .map(existing -> {
-                    existing.setTitle(problem.getTitle());
-                    existing.setTier(problem.getTier());
-                    existing.setCategory(problem.getCategory());
-                    existing.setDescription(problem.getDescription());
-                    existing.setInputDescription(problem.getInputDescription());
-                    existing.setOutputDescription(problem.getOutputDescription());
-
-                    existing.getTestCases().clear();
-                    if (problem.getTestCases() != null) {
-                        problem.getTestCases().forEach(tc -> {
-                            tc.setProblem(existing);
-                            existing.getTestCases().add(tc);
-                        });
-                    }
-                    return problemRepository.save(existing);
-                })
-                .orElseGet(() -> problemRepository.save(problem));
     }
 }

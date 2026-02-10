@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertProblemSchema, insertSolutionSchema, problems, solutions, Problem, TestCase } from './schema';
+import { insertSolutionSchema, problems, solutions, Problem, TestCase } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -30,7 +30,7 @@ export const api = {
     },
     get: {
       method: 'GET' as const,
-      path: '/api/problems/:id',
+      path: '/api/problems/:bojId',
       responses: {
         200: z.custom<Problem>(),
         404: errorSchemas.notFound,
@@ -50,7 +50,7 @@ export const api = {
       method: "DELETE" as const,
       path: "/api/problems/:id",
       responses: {
-        240: z.void(), // Changed from 204 because 204 is no content
+        204: z.void(),
         404: errorSchemas.notFound,
       },
     },

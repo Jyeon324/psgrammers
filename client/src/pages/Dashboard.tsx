@@ -7,6 +7,7 @@ import { format, subDays, startOfDay, eachDayOfInterval, isSameDay } from "date-
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { getTierGroup, TIER_COLORS } from "@/lib/tier-utils";
 
 // Custom Minimal Heatmap to avoid library crashes
 function CustomHeatmap({ data }: { data: any[] }) {
@@ -48,21 +49,6 @@ export default function Dashboard() {
   let calendarData: any[] = [];
   let tierStats: any[] = [];
   let tagStats: any[] = [];
-
-  const TIER_COLORS: Record<string, string> = {
-    "Unrated": "#adbac7", "Bronze": "#ad5600", "Silver": "#435f7a",
-    "Gold": "#ec9a00", "Platinum": "#27e2a4", "Diamond": "#00b4fc", "Ruby": "#ff0062"
-  };
-
-  const getTierGroup = (level: number) => {
-    if (level === 0) return "Unrated";
-    if (level <= 5) return "Bronze";
-    if (level <= 10) return "Silver";
-    if (level <= 15) return "Gold";
-    if (level <= 20) return "Platinum";
-    if (level <= 25) return "Diamond";
-    return "Ruby";
-  };
 
   if (solutions) {
     // 1. Prepare Heatmap Data

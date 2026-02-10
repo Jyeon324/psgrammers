@@ -21,7 +21,7 @@ WORKDIR /app
 
 # Create a non-root user for security
 # Install g++ and build-base for C++ compilation, and nodejs for JS
-RUN apk add --no-cache g++ build-base python3 nodejs npm
+RUN apk add --no-cache g++ build-base python3 nodejs
 
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring

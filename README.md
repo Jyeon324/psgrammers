@@ -49,7 +49,7 @@ psgrammers/
 │   │   ├── pages/                   # Home, Dashboard, Problems, Solve, Solutions
 │   │   ├── components/              # IDE, Sidebar, TierBadge + shadcn/ui
 │   │   ├── hooks/                   # use-auth, use-compiler, use-problems, use-solutions
-│   │   └── lib/                     # queryClient, utils, auth-utils
+│   │   └── lib/                     # queryClient, utils, tier-utils
 │   ├── package.json
 │   └── vite.config.ts               # 포트 5001, /api → :8080 프록시
 │
@@ -58,7 +58,7 @@ psgrammers/
 │   │   ├── controller/              # ProblemController, CompilerController
 │   │   ├── service/                 # CompilerService, BOJSyncService, ProblemService
 │   │   ├── entity/                  # Problem, TestCase (JPA 엔티티)
-│   │   ├── dto/                     # Request/Response DTOs
+│   │   ├── dto/                     # Request/Response DTOs (CompileRequest, CompileResponse, SyncProblemRequest)
 │   │   └── repository/              # ProblemRepository
 │   ├── src/main/resources/
 │   │   └── application.properties   # DB 접속 정보 (포트 5433)
@@ -155,7 +155,6 @@ npm run dev
 | `GET` | `/api/problems` | 전체 문제 목록 조회 |
 | `GET` | `/api/problems/:id` | 특정 문제 조회 (없으면 BOJ에서 자동 스크래핑) |
 | `POST` | `/api/problems/sync` | BOJ 문제 수동 동기화 (`{ bojId: number }`) |
-| `POST` | `/api/problems/import` | 문제 데이터 직접 등록 |
 | `DELETE` | `/api/problems/:id` | 문제 삭제 |
 
 ### Compiler
