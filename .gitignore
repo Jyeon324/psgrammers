@@ -26,6 +26,14 @@ target/
 .DS_Store
 
 
+# Temporary files
+issue_body_*.txt
+pr_body_*.txt
+
+# AI tool configs (Serena, Antigravity)
+.serena/
+.agent/
+
 # Editors and Caches
 .local
 .vite
