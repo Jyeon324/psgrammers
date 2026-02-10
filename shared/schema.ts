@@ -51,29 +51,3 @@ export type TestCase = typeof testCases.$inferSelect;
 
 export type Solution = typeof solutions.$inferSelect;
 export type InsertSolution = z.infer<typeof insertSolutionSchema>;
-
-// Request Types
-export type CreateSolutionRequest = {
-  problemId: number;
-  code: string;
-  language: string;
-  status: string;
-};
-
-// Compiler Types
-export type CompileRequest = {
-  code: string;
-  language: string;
-  input?: string;
-};
-
-export type CompileResponse = {
-  output: string;
-  error?: string;
-  success: boolean;
-};
-
-// BOJ Sync Type
-export type SyncProblemRequest = {
-  bojId: number;
-};
