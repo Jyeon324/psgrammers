@@ -5,12 +5,9 @@ import com.algoarena.dto.CompileResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -18,39 +15,41 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class CompilerService {
 
+    private static final int COMPILE_TIMEOUT_SECONDS = 10;
+    private static final int RUN_TIMEOUT_SECONDS = 10;
+    private static final int MAX_OUTPUT_BYTES = 64 * 1024; // 64KB
+
     public CompileResponse compileAndRun(CompileRequest request) {
         String id = UUID.randomUUID().toString();
-        Path tmpDir = Path.of(System.getProperty("java.io.tmpdir"));
-        List<Path> cleanupPaths = new ArrayList<>();
+        Path sandboxDir = Path.of(System.getProperty("java.io.tmpdir"), "algoarena-" + id);
 
         try {
+            Files.createDirectories(sandboxDir);
+
             // Input file
-            Path inputPath = tmpDir.resolve(id + ".in");
+            Path inputPath = sandboxDir.resolve("input.in");
             if (request.getInput() != null) {
                 Files.writeString(inputPath, request.getInput());
-                cleanupPaths.add(inputPath);
             }
 
             String code = request.getCode();
             String language = request.getLanguage();
-            String runCommand = "";
             Path sourcePath;
 
             if ("cpp".equals(language)) {
-                sourcePath = tmpDir.resolve(id + ".cpp");
-                Path binaryPath = tmpDir.resolve(id + ".out");
-                cleanupPaths.add(sourcePath);
-                cleanupPaths.add(binaryPath);
+                sourcePath = sandboxDir.resolve("solution.cpp");
+                Path binaryPath = sandboxDir.resolve("solution.out");
                 Files.writeString(sourcePath, code);
 
                 // Compile C++
                 ProcessBuilder pb = new ProcessBuilder("g++", sourcePath.toString(), "-o",
                         binaryPath.toString());
+                pb.directory(sandboxDir.toFile());
                 pb.redirectErrorStream(true);
                 Process process = pb.start();
-                boolean finished = process.waitFor(5, TimeUnit.SECONDS);
+                boolean finished = process.waitFor(COMPILE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                 if (!finished) {
-                    process.destroy();
+                    process.destroyForcibly();
                     return CompileResponse.builder()
                             .success(false)
                             .error("Compilation timed out")
@@ -66,83 +65,89 @@ public class CompilerService {
                             .output("")
                             .build();
                 }
-                runCommand = (request.getInput() != null && !request.getInput().isEmpty())
-                        ? binaryPath.toString() + " < " + inputPath.toString()
-                        : binaryPath.toString();
-                // Note: ProcessBuilder doesn't support < shell redirection directly in command
-                // list easily without shell
-                // So we execute via sh -c or handle redirection in Java
 
             } else if ("python".equals(language)) {
-                sourcePath = tmpDir.resolve(id + ".py");
-                cleanupPaths.add(sourcePath);
+                sourcePath = sandboxDir.resolve("solution.py");
                 Files.writeString(sourcePath, code);
-                runCommand = "python3 " + sourcePath.toString();
             } else if ("javascript".equals(language)) {
-                sourcePath = tmpDir.resolve(id + ".js");
-                cleanupPaths.add(sourcePath);
+                sourcePath = sandboxDir.resolve("solution.js");
                 Files.writeString(sourcePath, code);
-                runCommand = "node " + sourcePath.toString();
             } else {
-                throw new UnsupportedOperationException("Unsupported language: " + language);
+                return CompileResponse.builder()
+                        .success(false)
+                        .error("Unsupported language: " + language)
+                        .output("")
+                        .build();
             }
 
-            // Run
-            ProcessBuilder runPb;
+            ProcessBuilder runPb = buildRunProcessBuilder(language, sandboxDir, sourcePath);
+            runPb.directory(sandboxDir.toFile());
+
             if (request.getInput() != null && !request.getInput().isEmpty()) {
-                // To handle redirection properly without shell injection risk, ideally we pipe
-                // streams.
-                // But for simplicity mirroring exact behavior:
-                if ("cpp".equals(language)) {
-                    runPb = new ProcessBuilder(tmpDir.resolve(id + ".out").toString());
-                } else if ("python".equals(language)) {
-                    runPb = new ProcessBuilder("python3", sourcePath.toString());
-                } else if ("javascript".equals(language)) {
-                    runPb = new ProcessBuilder("node", sourcePath.toString());
-                } else {
-                    throw new RuntimeException("Unknown lang for run");
-                }
                 runPb.redirectInput(inputPath.toFile());
-            } else {
-                if ("cpp".equals(language)) {
-                    runPb = new ProcessBuilder(tmpDir.resolve(id + ".out").toString());
-                } else if ("python".equals(language)) {
-                    runPb = new ProcessBuilder("python3", sourcePath.toString());
-                } else if ("javascript".equals(language)) {
-                    runPb = new ProcessBuilder("node", sourcePath.toString());
-                } else {
-                    throw new RuntimeException("Unknown lang for run");
-                }
             }
 
             runPb.redirectErrorStream(true);
             Process runProcess = runPb.start();
-            boolean runFinished = runProcess.waitFor(2, TimeUnit.SECONDS);
+            boolean runFinished = runProcess.waitFor(RUN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             if (!runFinished) {
-                runProcess.destroy();
-                throw new RuntimeException("Execution timed out");
+                runProcess.destroyForcibly();
+                return CompileResponse.builder()
+                        .success(false)
+                        .error("Execution timed out (limit: " + RUN_TIMEOUT_SECONDS + "s)")
+                        .output("")
+                        .build();
             }
 
-            String output = new String(runProcess.getInputStream().readAllBytes());
+            byte[] outputBytes = runProcess.getInputStream().readAllBytes();
+            String output;
+            if (outputBytes.length > MAX_OUTPUT_BYTES) {
+                output = new String(outputBytes, 0, MAX_OUTPUT_BYTES) + "\n... (output truncated, limit: 64KB)";
+            } else {
+                output = new String(outputBytes);
+            }
 
             return CompileResponse.builder()
-                    .success(true)
+                    .success(runProcess.exitValue() == 0)
                     .output(output)
+                    .error(runProcess.exitValue() != 0 ? output : null)
                     .build();
 
         } catch (Exception e) {
+            log.error("Compile/run error: {}", e.getMessage(), e);
             return CompileResponse.builder()
                     .success(false)
                     .error(e.getMessage())
                     .output("")
                     .build();
         } finally {
-            for (Path p : cleanupPaths) {
-                try {
-                    Files.deleteIfExists(p);
-                } catch (IOException ignored) {
-                }
+            cleanupSandbox(sandboxDir);
+        }
+    }
+
+    private ProcessBuilder buildRunProcessBuilder(String language, Path sandboxDir, Path sourcePath) {
+        return switch (language) {
+            case "cpp" -> new ProcessBuilder(sandboxDir.resolve("solution.out").toString());
+            case "python" -> new ProcessBuilder("python3", sourcePath.toString());
+            case "javascript" -> new ProcessBuilder("node", sourcePath.toString());
+            default -> throw new IllegalArgumentException("Unsupported language: " + language);
+        };
+    }
+
+    private void cleanupSandbox(Path sandboxDir) {
+        try {
+            if (Files.exists(sandboxDir)) {
+                Files.walk(sandboxDir)
+                        .sorted(java.util.Comparator.reverseOrder())
+                        .forEach(path -> {
+                            try {
+                                Files.deleteIfExists(path);
+                            } catch (IOException ignored) {
+                            }
+                        });
             }
+        } catch (IOException e) {
+            log.warn("Failed to cleanup sandbox directory: {}", sandboxDir, e);
         }
     }
 }

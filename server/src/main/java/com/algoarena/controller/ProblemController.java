@@ -21,10 +21,10 @@ public class ProblemController {
         return problemRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Problem> getProblem(@PathVariable Integer id) {
+    @GetMapping("/{bojId}")
+    public ResponseEntity<Problem> getProblem(@PathVariable Integer bojId) {
         try {
-            return ResponseEntity.ok(problemService.getOrScrapeProblem(id));
+            return ResponseEntity.ok(problemService.getOrScrapeProblem(bojId));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.notFound().build();

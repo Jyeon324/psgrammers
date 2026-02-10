@@ -221,7 +221,7 @@ export default function Problems() {
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
-                  <Link href={`/solve/${problem.id}`}>
+                  <Link href={`/solve/${problem.bojId}`}>
                     <Button variant="secondary" className="group/btn">
                       Solve <ArrowRight className="ml-2 w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                     </Button>
