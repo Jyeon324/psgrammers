@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import "katex/dist/katex.min.css";
-import renderMathInElement from "katex/dist/contrib/auto-render";
+import renderMathInElement from "katex/contrib/auto-render";
 
 export default function Solve() {
   const { id } = useParams();
@@ -48,7 +48,7 @@ export default function Solve() {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-background text-foreground gap-4">
         <h1 className="text-2xl font-bold">Problem Not Found</h1>
-        <Link href="/problems"><Button>Go Back</Button></Link>
+        <Link href="/"><Button>Go Back</Button></Link>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function Solve() {
       {/* Top Bar */}
       <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 bg-secondary/30 backdrop-blur-md">
         <div className="flex items-center gap-4">
-          <Link href="/problems">
+          <Link href="/">
             <Button variant="ghost" size="icon" className="hover:bg-white/5">
               <ArrowLeft className="w-5 h-5" />
             </Button>

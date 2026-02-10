@@ -2,19 +2,17 @@ import { useRef, useState, useEffect } from "react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
-import { Loader2, Play, Save, CheckCircle2, AlertCircle, AlertTriangle, ChevronDown } from "lucide-react";
+import { Loader2, Play, CheckCircle2, AlertCircle, AlertTriangle, ChevronDown } from "lucide-react";
 import { useRunCode } from "@/hooks/use-compiler";
-import { useCreateSolution } from "@/hooks/use-solutions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
 import type { Problem, TestCase } from "@shared/schema";
 
 interface IDEProps {
   problem: Problem;
 }
 
-type SupportedLanguage = "cpp" | "python" | "javascript";
+type SupportedLanguage = "cpp" | "java" | "python" | "javascript";
 
 const LANGUAGE_CONFIG: Record<SupportedLanguage, { label: string; monacoId: string; extension: string; defaultCode: string }> = {
   cpp: {
@@ -31,6 +29,22 @@ int main() {
     // Write your code here
     cout << "Hello World!" << endl;
     return 0;
+}
+`,
+  },
+  java: {
+    label: "Java",
+    monacoId: "java",
+    extension: "java",
+    defaultCode: `import java.util.*;
+import java.io.*;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        // Write your code here
+        System.out.println("Hello World!");
+    }
 }
 `,
   },
@@ -114,8 +128,6 @@ export function IDE({ problem }: IDEProps) {
 
   const editorRef = useRef<any>(null);
   const runCode = useRunCode();
-  const createSolution = useCreateSolution();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (problem.testCases && problem.testCases.length > 0 && selectedTestCase === null) {
@@ -196,27 +208,6 @@ export function IDE({ problem }: IDEProps) {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      await createSolution.mutateAsync({
-        problemId: problem.id,
-        code,
-        language,
-        status: "pending"
-      });
-      toast({
-        title: "Solution Saved",
-        description: "Your code has been saved to your history.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save solution.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const currentTestCase = problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase);
   const expectedOutput = currentTestCase?.expectedOutput;
   const isInputMatched = customInput.trim() === currentTestCase?.input?.trim();
@@ -255,7 +246,6 @@ export function IDE({ problem }: IDEProps) {
               </div>
             )}
           </div>
-          {createSolution.isPending && <span className="text-xs text-muted-foreground animate-pulse">저장 중...</span>}
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -277,15 +267,6 @@ export function IDE({ problem }: IDEProps) {
           >
             {isRunning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
             실행
-          </Button>
-          <Button
-            size="sm"
-            className="h-8"
-            onClick={handleSubmit}
-            disabled={createSolution.isPending}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            제출
           </Button>
         </div>
       </div>
