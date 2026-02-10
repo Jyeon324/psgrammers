@@ -61,7 +61,7 @@ export const api = {
       path: '/api/compiler/run',
       input: z.object({
         code: z.string(),
-        language: z.string(),
+        language: z.enum(['cpp', 'java', 'python', 'javascript']),
         input: z.string().optional(),
       }),
       responses: {

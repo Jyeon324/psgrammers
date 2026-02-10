@@ -12,7 +12,7 @@ interface IDEProps {
   problem: Problem;
 }
 
-type SupportedLanguage = "cpp" | "python" | "javascript";
+type SupportedLanguage = "cpp" | "java" | "python" | "javascript";
 
 const LANGUAGE_CONFIG: Record<SupportedLanguage, { label: string; monacoId: string; extension: string; defaultCode: string }> = {
   cpp: {
@@ -29,6 +29,22 @@ int main() {
     // Write your code here
     cout << "Hello World!" << endl;
     return 0;
+}
+`,
+  },
+  java: {
+    label: "Java",
+    monacoId: "java",
+    extension: "java",
+    defaultCode: `import java.util.*;
+import java.io.*;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        // Write your code here
+        System.out.println("Hello World!");
+    }
 }
 `,
   },
