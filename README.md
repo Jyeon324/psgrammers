@@ -1,7 +1,92 @@
 # AlgoArena - Code Manager
 
 백준 온라인 저지(BOJ)와 연동되는 C++ / Python / JavaScript 코딩 연습 플랫폼입니다.
-BOJ 문제를 자동으로 스크래핑하여 웹 IDE에서 직접 풀고, 컴파일하고, 제출 이력을 관리할 수 있습니다.
+BOJ 문제를 자동으로 스크래핑하여 웹 IDE에서 직접 풀고, 예제 테스트케이스로 검증할 수 있습니다.
+
+---
+
+## 🏗 Architecture
+
+### 시스템 구성도
+
+```mermaid
+graph TB
+    subgraph Client ["🖥 Frontend (React + Vite)"]
+        Home["Home (/)"]
+        Solve["Solve (/solve/:id)"]
+        IDE["Monaco IDE"]
+    end
+
+    subgraph Server ["☕ Backend (Spring Boot)"]
+        PC["ProblemController"]
+        CC["CompilerController"]
+        PS["ProblemService"]
+        CS["CompilerService"]
+        Sync["BOJSyncService"]
+    end
+
+    subgraph Infra ["🗄 Infrastructure"]
+        DB[(PostgreSQL)]
+        Nginx["nginx"]
+    end
+
+    Bridge["🌐 Scraper Bridge\n(Vercel Serverless)"]
+    BOJ["📘 BOJ\n(acmicpc.net)"]
+
+    Home -->|문제번호 입력| Solve
+    Solve -->|GET /api/problems/:bojId| PC
+    IDE -->|POST /api/compiler/run| CC
+
+    PC --> PS
+    CC --> CS
+    PS -->|DB 조회| DB
+    PS -->|캐시 미스 시| Sync
+    Sync -->|HTTP| Bridge
+    Bridge -->|HTML 파싱| BOJ
+    PS -->|저장| DB
+    CS -->|g++ / python3 / node| CS
+
+    Nginx -->|정적 파일| Client
+    Nginx -->|/api 프록시| Server
+```
+
+### 문제 풀이 플로우
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Home as Home (/)
+    participant Solve as Solve Page
+    participant API as Spring Boot
+    participant DB as PostgreSQL
+    participant Bridge as Scraper Bridge
+    participant BOJ as BOJ (acmicpc.net)
+
+    User->>Home: 문제 번호 입력 (예: 1000)
+    Home->>Solve: 라우팅 /solve/1000
+
+    Solve->>API: GET /api/problems/1000
+    API->>DB: bojId=1000 조회
+
+    alt DB에 존재
+        DB-->>API: Problem + TestCases
+    else DB에 없음 (최초 접근)
+        API->>Bridge: GET /api/scrape?id=1000
+        Bridge->>BOJ: HTML 스크래핑
+        BOJ-->>Bridge: 문제 데이터
+        Bridge-->>API: JSON (title, description, testCases)
+        API->>DB: Problem + TestCases 저장
+    end
+
+    API-->>Solve: Problem 응답
+    Solve->>User: 문제 설명 + Monaco IDE 표시
+
+    User->>Solve: 코드 작성 후 실행 클릭
+    Solve->>API: POST /api/compiler/run {code, language, input}
+    API->>API: 컴파일 & 실행 (g++/python3/node)
+    API-->>Solve: {output, success}
+    Solve->>User: 실행 결과 표시 + 정답 비교
+```
 
 ---
 
@@ -13,9 +98,6 @@ BOJ 문제를 자동으로 스크래핑하여 웹 IDE에서 직접 풀고, 컴�
 - **Monaco Editor** (코드 에디터)
 - **TanStack Query** (서버 상태 관리)
 - **wouter** (라우팅)
-- **framer-motion** (애니메이션)
-- **recharts** (차트/통계)
-- **Zod** (런타임 유효성 검사)
 
 ### Backend (`/server`)
 - **Java 17** + **Spring Boot 3.4.1**
@@ -30,7 +112,7 @@ BOJ 문제를 자동으로 스크래핑하여 웹 IDE에서 직접 풀고, 컴�
 - BOJ의 IP 차단을 우회하기 위한 프록시 스크래퍼
 
 ### Shared (`/shared`)
-- **Drizzle ORM** + **Zod** (DB 스키마 & 타입 정의)
+- **Drizzle ORM** (DB 스키마 & 타입 정의)
 - 프론트엔드에서 타입 참조용으로 사용 (백엔드는 JPA 엔티티를 별도 관리)
 
 ### Infrastructure
@@ -46,9 +128,9 @@ BOJ 문제를 자동으로 스크래핑하여 웹 IDE에서 직접 풀고, 컴�
 psgrammers/
 ├── client/                          # React 프론트엔드
 │   ├── src/
-│   │   ├── pages/                   # Home, Dashboard, Problems, Solve, Solutions
-│   │   ├── components/              # IDE, Sidebar, TierBadge + shadcn/ui
-│   │   ├── hooks/                   # use-auth, use-compiler, use-problems, use-solutions
+│   │   ├── pages/                   # Home, Solve
+│   │   ├── components/              # IDE, TierBadge + shadcn/ui
+│   │   ├── hooks/                   # use-compiler, use-problems, use-toast
 │   │   └── lib/                     # queryClient, utils, tier-utils
 │   ├── package.json
 │   └── vite.config.ts               # 포트 5001, /api → :8080 프록시
@@ -70,9 +152,8 @@ psgrammers/
 │   └── vercel.json
 │
 ├── shared/                          # 공유 타입 & 스키마
-│   ├── schema.ts                    # Drizzle 테이블 정의 (problems, testCases, solutions)
-│   ├── routes.ts                    # API 경로 + Zod 스키마 정의
-│   └── models/auth.ts               # 사용자/세션 테이블 정의
+│   ├── schema.ts                    # Drizzle 테이블 정의 (problems, testCases)
+│   └── routes.ts                    # API 경로 정의
 │
 ├── deploy/                          # 프로덕션 배포 설정
 │   ├── Dockerfile.backend           # Spring Boot + g++/python3/node 포함
@@ -141,8 +222,7 @@ npm run dev
 - **BOJ 문제 동기화**: 백준 문제 번호를 입력하면 자동으로 문제/테스트케이스를 스크래핑
 - **웹 IDE**: Monaco Editor 기반 C++, Python, JavaScript 코드 편집
 - **코드 컴파일 & 실행**: 서버에서 `g++`, `python3`, `node`를 사용하여 안전하게 실행
-- **대시보드**: 풀이 통계 및 활동 기록 시각화
-- **제출 이력**: 과거 제출 코드 및 결과 조회
+- **예제 테스트**: 스크래핑된 예제 입출력으로 자동 정답 비교
 
 ---
 
