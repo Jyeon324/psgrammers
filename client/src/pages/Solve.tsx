@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import "katex/dist/katex.min.css";
-import renderMathInElement from "katex/dist/contrib/auto-render";
+import renderMathInElement from "katex/contrib/auto-render";
 
 export default function Solve() {
   const { id } = useParams();

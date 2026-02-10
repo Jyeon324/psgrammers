@@ -9,6 +9,7 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "src"),
       "@shared": path.resolve(import.meta.dirname, "../shared"),
       "@assets": path.resolve(import.meta.dirname, "../attached_assets"),
+      "zod": path.resolve(import.meta.dirname, "node_modules/zod"),
       "drizzle-orm": path.resolve(import.meta.dirname, "node_modules/drizzle-orm"),
       "drizzle-zod": path.resolve(import.meta.dirname, "node_modules/drizzle-zod"),
     },
