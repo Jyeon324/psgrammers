@@ -1,13 +1,11 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:16
     container_name: psgrammers-db
     environment:
       POSTGRES_DB: psgrammers
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5433:5432"
     volumes:
