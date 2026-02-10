@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl } from "@shared/routes";
-import type { Problem, SyncProblemRequest } from "@shared/schema";
+import { api, buildUrl, type SyncProblemRequest } from "@shared/routes";
+import type { Problem } from "@shared/schema";
 import { z } from "zod";
 
 export function useProblems(filters?: { search?: string; category?: string; tier?: number }) {

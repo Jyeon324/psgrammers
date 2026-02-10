@@ -3,6 +3,9 @@ import { useSolutions } from "@/hooks/use-solutions";
 import { Loader2, Code2, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { TierBadge } from "@/components/TierBadge";
+import type { Solution, Problem } from "@shared/schema";
+
+type SolutionWithProblem = Solution & { problem: Problem };
 
 export default function Solutions() {
   const { data: solutions, isLoading } = useSolutions();
@@ -19,7 +22,7 @@ export default function Solutions() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {solutions?.map((solution: any) => (
+            {(solutions as SolutionWithProblem[] | undefined)?.map((solution) => (
               <div 
                 key={solution.id}
                 className="bg-card p-6 rounded-xl border border-white/5 hover:border-white/10 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
