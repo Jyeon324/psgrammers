@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertSolutionSchema, problems, solutions, Problem, TestCase } from './schema';
+import { problems, Problem } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -55,27 +55,6 @@ export const api = {
       },
     },
   },
-  solutions: {
-    list: {
-      method: 'GET' as const,
-      path: '/api/solutions',
-      input: z.object({
-        problemId: z.coerce.number().optional(),
-      }).optional(),
-      responses: {
-        200: z.array(z.custom<typeof solutions.$inferSelect & { problem: typeof problems.$inferSelect }>()),
-      },
-    },
-    create: {
-      method: 'POST' as const,
-      path: '/api/solutions',
-      input: insertSolutionSchema.pick({ problemId: true, code: true, language: true, status: true }),
-      responses: {
-        201: z.custom<typeof solutions.$inferSelect>(),
-        400: errorSchemas.validation,
-      },
-    },
-  },
   compiler: {
     run: {
       method: 'POST' as const,
@@ -97,7 +76,6 @@ export const api = {
 };
 
 export type CompileRequest = z.infer<typeof api.compiler.run.input>;
-export type CreateSolutionRequest = z.infer<typeof api.solutions.create.input>;
 export type SyncProblemRequest = z.infer<typeof api.problems.sync.input>;
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {
