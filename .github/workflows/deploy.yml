@@ -1,0 +1,54 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to OCI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script_stop: true
+          script: |
+            cd ${{ secrets.OCI_DEPLOY_PATH }}
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            cd deploy
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --build
+            docker image prune -f
+
+      - name: Health check
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script: |
+            sleep 30
+            if docker ps --filter "name=psgrammers-backend" --filter "status=running" | grep -q psgrammers-backend; then
+              echo "Backend is running"
+            else
+              echo "Backend failed to start"
+              docker logs psgrammers-backend --tail 50
+              exit 1
+            fi
+            if docker ps --filter "name=psgrammers-frontend" --filter "status=running" | grep -q psgrammers-frontend; then
+              echo "Frontend is running"
+            else
+              echo "Frontend failed to start"
+              docker logs psgrammers-frontend --tail 50
+              exit 1
+            fi
