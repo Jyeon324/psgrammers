@@ -1,7 +1,7 @@
-package com.algoarena.service;
+package com.psgrammers.service;
 
-import com.algoarena.dto.CompileRequest;
-import com.algoarena.dto.CompileResponse;
+import com.psgrammers.dto.CompileRequest;
+import com.psgrammers.dto.CompileResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +21,7 @@ public class CompilerService {
 
     public CompileResponse compileAndRun(CompileRequest request) {
         String id = UUID.randomUUID().toString();
-        Path sandboxDir = Path.of(System.getProperty("java.io.tmpdir"), "algoarena-" + id);
+        Path sandboxDir = Path.of(System.getProperty("java.io.tmpdir"), "psgrammers-" + id);
 
         try {
             Files.createDirectories(sandboxDir);

@@ -1,7 +1,7 @@
-package com.algoarena.controller;
+package com.psgrammers.controller;
 
-import com.algoarena.entity.Problem;
-import com.algoarena.repository.ProblemRepository;
+import com.psgrammers.entity.Problem;
+import com.psgrammers.repository.ProblemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,7 @@ import java.util.List;
 public class ProblemController {
 
     private final ProblemRepository problemRepository;
-    private final com.algoarena.service.ProblemService problemService;
+    private final com.psgrammers.service.ProblemService problemService;
 
     @GetMapping
     public List<Problem> getProblems() {
@@ -32,7 +32,7 @@ public class ProblemController {
     }
 
     @PostMapping("/sync")
-    public ResponseEntity<Problem> syncProblem(@RequestBody com.algoarena.dto.SyncProblemRequest request)
+    public ResponseEntity<Problem> syncProblem(@RequestBody com.psgrammers.dto.SyncProblemRequest request)
             throws java.io.IOException {
         return ResponseEntity.ok(problemService.syncProblem(request.getBojId()));
     }

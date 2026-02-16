@@ -1,4 +1,4 @@
-package com.algoarena.config;
+package com.psgrammers.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

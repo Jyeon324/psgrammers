@@ -1,8 +1,8 @@
-package com.algoarena.controller;
+package com.psgrammers.controller;
 
-import com.algoarena.dto.CompileRequest;
-import com.algoarena.dto.CompileResponse;
-import com.algoarena.service.CompilerService;
+import com.psgrammers.dto.CompileRequest;
+import com.psgrammers.dto.CompileResponse;
+import com.psgrammers.service.CompilerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
