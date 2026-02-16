@@ -1,4 +1,4 @@
-# AlgoArena - Code Manager
+# psgrammers
 
 백준 온라인 저지(BOJ)와 연동되는 C++ / Java / Python / JavaScript 코딩 연습 플랫폼입니다.
 BOJ 문제를 자동으로 스크래핑하여 웹 IDE에서 직접 풀고, 예제 테스트케이스로 검증할 수 있습니다.
@@ -136,7 +136,7 @@ psgrammers/
 │   └── vite.config.ts               # 포트 5001, /api → :8080 프록시
 │
 ├── server/                          # Spring Boot 백엔드
-│   ├── src/main/java/com/algoarena/
+│   ├── src/main/java/com/psgrammers/
 │   │   ├── controller/              # ProblemController, CompilerController
 │   │   ├── service/                 # CompilerService, BOJSyncService, ProblemService
 │   │   ├── entity/                  # Problem, TestCase (JPA 엔티티)
@@ -266,6 +266,50 @@ npm run dev
 2. `dev`에서 작업 브랜치 생성 (`feature/#번호`)
 3. 작업 완료 후 `dev` 브랜치로 Pull Request 생성
 4. 리뷰 및 병합 후 작업 브랜치 삭제
+
+---
+
+## Changelog
+
+### v1.2.0 (2025-02-16)
+<details>
+<summary>펼쳐보기</summary>
+
+**새 기능**
+- 문제 풀이 페이지 힌트 토글 기능 - 알고리즘 유형과 난이도를 선택적으로 표시
+
+**버그 수정**
+- BOJ 이미지 핫링크 차단 문제 해결
+
+**개선사항**
+- Java 언어 지원 추가
+- 미사용 코드 정리
+
+</details>
+
+### v1.1.0 (2025-02-XX)
+<details>
+<summary>펼쳐보기</summary>
+
+**새 기능**
+- Java 언어 컴파일 및 실행 지원
+
+**버그 수정**
+- shared 모듈 경로 해결
+
+</details>
+
+### v1.0.0 (2025-XX-XX)
+<details>
+<summary>펼쳐보기</summary>
+
+**초기 릴리스**
+- BOJ 문제 스크래핑 및 동기화
+- 웹 IDE (Monaco Editor)
+- C++, Python, JavaScript 지원
+- 코드 컴파일 및 실행
+
+</details>
 
 ---
 

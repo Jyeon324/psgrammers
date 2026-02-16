@@ -1,7 +1,7 @@
-package com.algoarena.service;
+package com.psgrammers.service;
 
-import com.algoarena.entity.Problem;
-import com.algoarena.repository.ProblemRepository;
+import com.psgrammers.entity.Problem;
+import com.psgrammers.repository.ProblemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,7 +1,7 @@
-package com.algoarena.service;
+package com.psgrammers.service;
 
-import com.algoarena.entity.Problem;
-import com.algoarena.entity.TestCase;
+import com.psgrammers.entity.Problem;
+import com.psgrammers.entity.TestCase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
