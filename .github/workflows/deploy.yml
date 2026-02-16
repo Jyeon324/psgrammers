@@ -19,8 +19,8 @@ jobs:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_USER }}
           key: ${{ secrets.OCI_SSH_KEY }}
-          script_stop: true
           script: |
+            set -e
             cd ${{ secrets.OCI_DEPLOY_PATH }}
             git fetch origin main
             git checkout main
