@@ -1,4 +1,4 @@
-package com.algoarena.dto;
+package com.psgrammers.dto;
 
 import lombok.Data;
 

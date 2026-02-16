@@ -5,7 +5,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { IDE } from "@/components/IDE";
 import { TierBadge } from "@/components/TierBadge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Loader2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import "katex/dist/katex.min.css";
 import renderMathInElement from "katex/contrib/auto-render";
@@ -69,12 +69,11 @@ export default function Solve() {
           {showMetadata && <TierBadge tier={problem.tier || 0} />}
           <Button
             variant="ghost"
-            size="icon"
-            className="ml-2 hover:bg-white/5"
+            size="sm"
+            className="ml-2 hover:bg-white/5 text-xs"
             onClick={() => setShowMetadata(!showMetadata)}
-            title={showMetadata ? "알고리즘/난이도 숨기기" : "알고리즘/난이도 표시"}
           >
-            {showMetadata ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showMetadata ? "힌트 숨기기" : "힌트 보기"}
           </Button>
         </div>
 

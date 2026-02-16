@@ -1,4 +1,4 @@
-package com.algoarena.entity;
+package com.psgrammers.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
