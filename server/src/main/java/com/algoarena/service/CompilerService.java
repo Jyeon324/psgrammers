@@ -42,29 +42,18 @@ public class CompilerService {
                 Files.writeString(sourcePath, code);
 
                 // Compile C++
-                ProcessBuilder pb = new ProcessBuilder("g++", sourcePath.toString(), "-o",
-                        binaryPath.toString());
-                pb.directory(sandboxDir.toFile());
-                pb.redirectErrorStream(true);
-                Process process = pb.start();
-                boolean finished = process.waitFor(COMPILE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-                if (!finished) {
-                    process.destroyForcibly();
-                    return CompileResponse.builder()
-                            .success(false)
-                            .error("Compilation timed out")
-                            .output("")
-                            .build();
-                }
-                if (process.exitValue() != 0) {
-                    String errorOutput = new String(process.getInputStream().readAllBytes());
-                    log.error("Compilation failed: {}", errorOutput);
-                    return CompileResponse.builder()
-                            .success(false)
-                            .error("Compilation failed: " + errorOutput)
-                            .output("")
-                            .build();
-                }
+                CompileResponse compileError = compileWithCommand(
+                        sandboxDir, new String[]{"g++", sourcePath.toString(), "-o", binaryPath.toString()});
+                if (compileError != null) return compileError;
+
+            } else if ("java".equals(language)) {
+                sourcePath = sandboxDir.resolve("Main.java");
+                Files.writeString(sourcePath, code);
+
+                // Compile Java
+                CompileResponse compileError = compileWithCommand(
+                        sandboxDir, new String[]{"javac", sourcePath.toString()});
+                if (compileError != null) return compileError;
 
             } else if ("python".equals(language)) {
                 sourcePath = sandboxDir.resolve("solution.py");
@@ -125,9 +114,36 @@ public class CompilerService {
         }
     }
 
+    private CompileResponse compileWithCommand(Path sandboxDir, String[] command) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.directory(sandboxDir.toFile());
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        boolean finished = process.waitFor(COMPILE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        if (!finished) {
+            process.destroyForcibly();
+            return CompileResponse.builder()
+                    .success(false)
+                    .error("Compilation timed out")
+                    .output("")
+                    .build();
+        }
+        if (process.exitValue() != 0) {
+            String errorOutput = new String(process.getInputStream().readAllBytes());
+            log.error("Compilation failed: {}", errorOutput);
+            return CompileResponse.builder()
+                    .success(false)
+                    .error("Compilation failed: " + errorOutput)
+                    .output("")
+                    .build();
+        }
+        return null;
+    }
+
     private ProcessBuilder buildRunProcessBuilder(String language, Path sandboxDir, Path sourcePath) {
         return switch (language) {
             case "cpp" -> new ProcessBuilder(sandboxDir.resolve("solution.out").toString());
+            case "java" -> new ProcessBuilder("java", "-cp", sandboxDir.toString(), "Main");
             case "python" -> new ProcessBuilder("python3", sourcePath.toString());
             case "javascript" -> new ProcessBuilder("node", sourcePath.toString());
             default -> throw new IllegalArgumentException("Unsupported language: " + language);

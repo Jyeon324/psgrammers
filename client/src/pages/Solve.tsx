@@ -1,19 +1,20 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useProblem } from "@/hooks/use-problems";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { IDE } from "@/components/IDE";
 import { TierBadge } from "@/components/TierBadge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Eye, EyeOff } from "lucide-react";
 import { Link } from "wouter";
 import "katex/dist/katex.min.css";
-import renderMathInElement from "katex/dist/contrib/auto-render";
+import renderMathInElement from "katex/contrib/auto-render";
 
 export default function Solve() {
   const { id } = useParams();
   const { data: problem, isLoading, error } = useProblem(Number(id));
   const containerRef = useRef<HTMLDivElement>(null);
+  const [showMetadata, setShowMetadata] = useState(false);
 
   useEffect(() => {
     if (problem && containerRef.current) {
@@ -48,7 +49,7 @@ export default function Solve() {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-background text-foreground gap-4">
         <h1 className="text-2xl font-bold">Problem Not Found</h1>
-        <Link href="/problems"><Button>Go Back</Button></Link>
+        <Link href="/"><Button>Go Back</Button></Link>
       </div>
     );
   }
@@ -58,14 +59,23 @@ export default function Solve() {
       {/* Top Bar */}
       <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 bg-secondary/30 backdrop-blur-md">
         <div className="flex items-center gap-4">
-          <Link href="/problems">
+          <Link href="/">
             <Button variant="ghost" size="icon" className="hover:bg-white/5">
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
           <div className="h-6 w-px bg-white/10" />
           <h1 className="font-bold text-lg truncate max-w-md">{problem.title}</h1>
-          <TierBadge tier={problem.tier || 0} />
+          {showMetadata && <TierBadge tier={problem.tier || 0} />}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2 hover:bg-white/5"
+            onClick={() => setShowMetadata(!showMetadata)}
+            title={showMetadata ? "알고리즘/난이도 숨기기" : "알고리즘/난이도 표시"}
+          >
+            {showMetadata ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </Button>
         </div>
 
         <div className="flex items-center gap-2">
@@ -90,7 +100,9 @@ export default function Solve() {
               <div className="prose prose-invert max-w-none prose-headings:font-bold prose-p:text-muted-foreground prose-code:text-primary prose-pre:bg-secondary/50">
                 <div className="flex items-center gap-2 mb-6">
                   <span className="font-mono text-sm text-muted-foreground">ID: {problem.bojId}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-secondary text-xs text-muted-foreground">{problem.category || '알고리즘'}</span>
+                  {showMetadata && (
+                    <span className="px-2 py-0.5 rounded-full bg-secondary text-xs text-muted-foreground">{problem.category || '알고리즘'}</span>
+                  )}
                 </div>
 
                 {problem.description ? (
