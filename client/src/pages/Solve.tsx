@@ -5,6 +5,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { IDE } from "@/components/IDE";
 import { TierBadge } from "@/components/TierBadge";
 import { Button } from "@/components/ui/button";
+import { Stopwatch } from "@/components/Stopwatch";
 import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import "katex/dist/katex.min.css";
@@ -67,6 +68,7 @@ export default function Solve() {
           <div className="h-6 w-px bg-white/10" />
           <h1 className="font-bold text-lg truncate max-w-md">{problem.title}</h1>
           {showMetadata && <TierBadge tier={problem.tier || 0} />}
+          <Stopwatch />
           <Button
             variant="ghost"
             size="sm"
