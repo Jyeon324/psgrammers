@@ -22,7 +22,7 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.OCI_DEPLOY_PATH }}
-            git fetch origin main
+            git fetch origin main --unshallow
             git checkout -B main origin/main
             cd deploy
             docker compose -f docker-compose.prod.yml pull
