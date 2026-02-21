@@ -22,8 +22,12 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.OCI_DEPLOY_PATH }}
-            git remote -v
-            git fetch origin main
+            if [ -d .git ]; then
+              git fetch --depth=1 origin main
+            else
+              git clone https://github.com/Jyeon324/psgrammers.git .
+              git checkout main
+            fi
             git reset --hard origin/main
             cd deploy
             docker compose -f docker-compose.prod.yml pull
