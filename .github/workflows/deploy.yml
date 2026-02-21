@@ -25,8 +25,16 @@ jobs:
             if [ -d .git ]; then
               rm -rf .git
             fi
-            git clone https://github.com/Jyeon324/psgrammers.git .
-            git checkout main
+            cd ..
+            rm -rf psgrammers_temp
+            git clone https://github.com/Jyeon324/psgrammers.git psgrammers_temp
+            rm -rf psgrammers_old
+            mv psgrammers psgrammers_old 2>/dev/null || true
+            mv psgrammers_temp psgrammers
+            cd psgrammers/deploy
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --build
+            docker image prune -f
             cd deploy
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --build
