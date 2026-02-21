@@ -23,17 +23,11 @@ jobs:
             set -e
             DEPLOY_PATH=${{ secrets.OCI_DEPLOY_PATH }}
             cd $DEPLOY_PATH
-            if [ -d .git ]; then
-              rm -rf .git
-            fi
-            cd ..
-            rm -rf psgrammers_temp
-            git clone https://github.com/Jyeon324/psgrammers.git psgrammers_temp
-            rm -rf psgrammers_old
-            mv psgrammers psgrammers_old 2>/dev/null || true
-            mv psgrammers_temp psgrammers
-            docker compose -f $DEPLOY_PATH/psgrammers/deploy/docker-compose.prod.yml pull
-            docker compose -f $DEPLOY_PATH/psgrammers/deploy/docker-compose.prod.yml up -d --build
+            git fetch origin main
+            git checkout -f main
+            cd deploy
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --build
             docker image prune -f
             cd deploy
             docker compose -f docker-compose.prod.yml pull
