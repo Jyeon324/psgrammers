@@ -22,8 +22,16 @@ jobs:
           script: |
             set -e
             DEPLOY_PATH=${{ secrets.OCI_DEPLOY_PATH }}
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             PARENT_PATH=$(dirname $DEPLOY_PATH)
             REPO_NAME=$(basename $DEPLOY_PATH)
+            if [ -z "$POSTGRES_USER" ]; then
+              POSTGRES_USER=postgres
+            fi
+            if [ -z "$POSTGRES_PASSWORD" ]; then
+              POSTGRES_PASSWORD=postgres
+            fi
             mkdir -p $PARENT_PATH
             if [ -d "$DEPLOY_PATH/.git" ]; then
               cd $DEPLOY_PATH
@@ -41,6 +49,8 @@ jobs:
               git clone https://github.com/Jyeon324/psgrammers.git $REPO_NAME
             fi
             cd $DEPLOY_PATH/deploy
+            printf "POSTGRES_USER=%s\nPOSTGRES_PASSWORD=%s\n" "$POSTGRES_USER" "$POSTGRES_PASSWORD" > .env
+            chmod 600 .env
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --build
             docker image prune -f
