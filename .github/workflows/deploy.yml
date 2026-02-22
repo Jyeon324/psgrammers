@@ -29,6 +29,13 @@ jobs:
               cd $DEPLOY_PATH
               git fetch origin main
               git reset --hard origin/main
+            elif [ -d "$DEPLOY_PATH" ]; then
+              cd $DEPLOY_PATH
+              git init
+              git remote remove origin || true
+              git remote add origin https://github.com/Jyeon324/psgrammers.git
+              git fetch origin main
+              git checkout -f -B main origin/main
             else
               cd $PARENT_PATH
               git clone https://github.com/Jyeon324/psgrammers.git $REPO_NAME
