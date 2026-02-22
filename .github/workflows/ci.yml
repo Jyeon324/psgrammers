@@ -3,6 +3,7 @@ name: CI
 on:
   pull_request:
     branches: [main, dev]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -30,7 +31,7 @@ jobs:
   client-build:
     name: Client Build
     needs: changes
-    if: needs.changes.outputs.client == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.client == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -56,7 +57,7 @@ jobs:
   server-build:
     name: Server Build
     needs: changes
-    if: needs.changes.outputs.server == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
