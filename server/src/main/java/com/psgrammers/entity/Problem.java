@@ -28,6 +28,19 @@ public class Problem {
     @Column(columnDefinition = "text")
     private String category;
 
+    @Column(name = "time_limit", columnDefinition = "text")
+    private String timeLimit;
+
+    @Column(name = "memory_limit", columnDefinition = "text")
+    private String memoryLimit;
+
+    @Column(columnDefinition = "text")
+    private String hint;
+
+    @Column(columnDefinition = "text")
+    private String description;
+    private String category;
+
     @Column(columnDefinition = "text")
     private String description;
 

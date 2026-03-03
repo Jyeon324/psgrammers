@@ -16,6 +16,13 @@ import java.util.concurrent.TimeUnit;
 public class CompilerService {
 
     private static final int COMPILE_TIMEOUT_SECONDS = 10;
+    private static final int DEFAULT_RUN_TIMEOUT_SECONDS = 10;
+    private static final int MAX_OUTPUT_BYTES = 64 * 1024; // 64KB
+
+    public CompileResponse compileAndRun(CompileRequest request) {
+        int timeoutSeconds = request.getTimeLimit() != null ? request.getTimeLimit() : DEFAULT_RUN_TIMEOUT_SECONDS;
+
+        String id = UUID.randomUUID().toString();
     private static final int RUN_TIMEOUT_SECONDS = 10;
     private static final int MAX_OUTPUT_BYTES = 64 * 1024; // 64KB
 
@@ -77,6 +84,16 @@ public class CompilerService {
             }
 
             runPb.redirectErrorStream(true);
+            Process runProcess = runPb.start();
+            boolean runFinished = runProcess.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+            if (!runFinished) {
+                runProcess.destroyForcibly();
+                return CompileResponse.builder()
+                        .success(false)
+                        .error("시간 초과 (제한시간: " + timeoutSeconds + "초)")
+                        .output("")
+                        .build();
+            }
             Process runProcess = runPb.start();
             boolean runFinished = runProcess.waitFor(RUN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             if (!runFinished) {

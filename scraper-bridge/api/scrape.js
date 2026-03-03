@@ -74,6 +74,17 @@ module.exports = async (req, res) => {
         let inputDescription = $('#problem_input').html();
         let outputDescription = $('#problem_output').html();
 
+        // Extract time limit and memory limit
+        const timeLimit = $('#problem-info td:first-child').text().trim();
+        const memoryLimit = $('#problem-info td:nth-child(2)').text().trim();
+
+        // Extract hint if available
+        const hint = $('#problem_hint .problem-text').text().trim() || null;
+        const title = $('#problem_title').text();
+        let description = $('#problem_description').html();
+        let inputDescription = $('#problem_input').html();
+        let outputDescription = $('#problem_output').html();
+
         // 3. Convert images in HTML to base64 data URIs
         [description, inputDescription, outputDescription] = await Promise.all([
             inlineImages($, description, headers),
@@ -114,6 +125,19 @@ module.exports = async (req, res) => {
         }
 
         // 5. Return JSON
+        res.status(200).json({
+            bojId: parseInt(id),
+            title,
+            tier,
+            category,
+            timeLimit,
+            memoryLimit,
+            hint,
+            description,
+            inputDescription,
+            outputDescription,
+            testCases
+        });
         res.status(200).json({
             bojId: parseInt(id),
             title,

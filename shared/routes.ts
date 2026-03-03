@@ -63,6 +63,8 @@ export const api = {
         code: z.string(),
         language: z.enum(['cpp', 'java', 'python', 'javascript']),
         input: z.string().optional(),
+        timeLimit: z.number().optional(),
+        memoryLimit: z.number().optional(),
       }),
       responses: {
         200: z.object({
