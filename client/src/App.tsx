@@ -8,11 +8,13 @@ import NotFound from "@/pages/not-found";
 // Pages
 import Home from "@/pages/Home";
 import Solve from "@/pages/Solve";
+import StandaloneIDE from "@/pages/StandaloneIDE";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/ide" component={StandaloneIDE} />
       <Route path="/solve/:id" component={Solve} />
       <Route component={NotFound} />
     </Switch>

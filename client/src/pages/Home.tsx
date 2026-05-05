@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Code2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -58,6 +58,15 @@ export default function Home() {
                         </Button>
                     </div>
                 </div>
+
+                <Button
+                    variant="outline"
+                    className="h-11 rounded-full border-2 border-gray-200 bg-white px-5 text-gray-600 hover:border-[#0076C0] hover:bg-blue-50 hover:text-[#0076C0]"
+                    onClick={() => setLocation("/ide")}
+                >
+                    <Code2 className="mr-2 h-4 w-4" />
+                    IDE 열기
+                </Button>
 
                 {/* Footer / Links (Optional, kept minimal) */}
                 <div className="flex gap-6 text-sm text-gray-400 mt-8">

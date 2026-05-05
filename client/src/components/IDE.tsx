@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import type { Problem, TestCase } from "@shared/schema";
 
 interface IDEProps {
-  problem: Problem;
+  problem?: Problem;
 }
 
 type SupportedLanguage = "cpp" | "java" | "python" | "javascript";
@@ -76,6 +76,8 @@ rl.on('close', () => {
   },
 };
 
+const EMPTY_TEST_CASES: TestCase[] = [];
+
 // Output normalization function to relax comparison (ignore trailing whitespace and extra newlines)
 const normalizeOutput = (str: string | null | undefined) => {
   if (!str) return "";
@@ -89,8 +91,12 @@ const normalizeOutput = (str: string | null | undefined) => {
 };
 
 export function IDE({ problem }: IDEProps) {
+  const storageScope = problem ? `problem_${problem.id}` : "standalone_ide";
+  const hasProblem = Boolean(problem);
+  const testCases = problem?.testCases ?? EMPTY_TEST_CASES;
+
   const [language, setLanguage] = useState<SupportedLanguage>(() => {
-    const saved = localStorage.getItem(`problem_lang_${problem.id}`);
+    const saved = localStorage.getItem(`${storageScope}_lang`);
     return (saved as SupportedLanguage) || "cpp";
   });
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -98,21 +104,21 @@ export function IDE({ problem }: IDEProps) {
   const langConfig = LANGUAGE_CONFIG[language];
 
   const [code, setCode] = useState(() => {
-    const savedCode = localStorage.getItem(`problem_code_${problem.id}_${language}`);
+    const savedCode = localStorage.getItem(`${storageScope}_code_${language}`);
     return savedCode || langConfig.defaultCode;
   });
 
   useEffect(() => {
-    localStorage.setItem(`problem_code_${problem.id}_${language}`, code);
-  }, [code, problem.id, language]);
+    localStorage.setItem(`${storageScope}_code_${language}`, code);
+  }, [code, storageScope, language]);
 
   useEffect(() => {
-    localStorage.setItem(`problem_lang_${problem.id}`, language);
-  }, [language, problem.id]);
+    localStorage.setItem(`${storageScope}_lang`, language);
+  }, [language, storageScope]);
 
   const handleLanguageChange = (newLang: SupportedLanguage) => {
     if (newLang === language) return;
-    const savedCode = localStorage.getItem(`problem_code_${problem.id}_${newLang}`);
+    const savedCode = localStorage.getItem(`${storageScope}_code_${newLang}`);
     setCode(savedCode || LANGUAGE_CONFIG[newLang].defaultCode);
     setLanguage(newLang);
     setShowLangMenu(false);
@@ -120,7 +126,7 @@ export function IDE({ problem }: IDEProps) {
 
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
-  const [activeTab, setActiveTab] = useState<'output' | 'input' | 'samples'>('samples');
+  const [activeTab, setActiveTab] = useState<'output' | 'input' | 'samples'>(hasProblem ? 'samples' : 'input');
   const [customInput, setCustomInput] = useState("");
   const [testResults, setTestResults] = useState<Record<number, { success: boolean; output: string } | null>>({});
   const [isRunningAll, setIsRunningAll] = useState(false);
@@ -130,25 +136,25 @@ export function IDE({ problem }: IDEProps) {
   const runCode = useRunCode();
 
   useEffect(() => {
-    if (problem.testCases && problem.testCases.length > 0 && selectedTestCase === null) {
-      setSelectedTestCase(problem.testCases[0].sampleNumber);
-      setCustomInput(problem.testCases[0].input);
+    if (testCases.length > 0 && selectedTestCase === null) {
+      setSelectedTestCase(testCases[0].sampleNumber);
+      setCustomInput(testCases[0].input);
     }
-  }, [problem.testCases, selectedTestCase]);
+  }, [testCases, selectedTestCase]);
 
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
   };
 
   const handleRunAll = async () => {
-    if (!problem.testCases || problem.testCases.length === 0) return;
+    if (testCases.length === 0) return;
 
     setIsRunningAll(true);
     setTestResults({});
     setActiveTab('samples');
 
     // 순차적으로 실행 (병렬 실행 시 서버 부하 고려)
-    for (const tc of problem.testCases) {
+    for (const tc of testCases) {
       if (!tc.sampleNumber) continue;
 
       try {
@@ -176,7 +182,7 @@ export function IDE({ problem }: IDEProps) {
   };
 
   const handleSelectSample = (sampleNum: number) => {
-    const tc = problem.testCases?.find((t: TestCase) => t.sampleNumber === sampleNum);
+    const tc = testCases.find((t: TestCase) => t.sampleNumber === sampleNum);
     if (tc) {
       setSelectedTestCase(sampleNum);
       setCustomInput(tc.input);
@@ -208,9 +214,9 @@ export function IDE({ problem }: IDEProps) {
     }
   };
 
-  const currentTestCase = problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase);
+  const currentTestCase = testCases.find((t: TestCase) => t.sampleNumber === selectedTestCase);
   const expectedOutput = currentTestCase?.expectedOutput;
-  const isInputMatched = customInput.trim() === currentTestCase?.input?.trim();
+  const isInputMatched = Boolean(currentTestCase) && customInput.trim() === currentTestCase?.input?.trim();
 
   const isError = output.startsWith("에러:") || output === "실행 오류" || output.includes("Error:") || output.includes("RuntimeException");
   const isCorrect = !isError && isInputMatched && normalizeOutput(output) === normalizeOutput(expectedOutput);
@@ -248,16 +254,18 @@ export function IDE({ problem }: IDEProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="secondary"
-            className="h-8 bg-purple-600/10 text-purple-400 hover:bg-purple-600/20 border border-purple-600/20"
-            onClick={handleRunAll}
-            disabled={isRunning || isRunningAll || runCode.isPending}
-          >
-            {isRunningAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-            전체 실행
-          </Button>
+          {hasProblem && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8 bg-purple-600/10 text-purple-400 hover:bg-purple-600/20 border border-purple-600/20"
+              onClick={handleRunAll}
+              disabled={isRunning || isRunningAll || runCode.isPending}
+            >
+              {isRunningAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+              전체 실행
+            </Button>
+          )}
           <Button
             size="sm"
             variant="secondary"
@@ -290,6 +298,14 @@ export function IDE({ problem }: IDEProps) {
               smoothScrolling: true,
               cursorBlinking: "smooth",
               cursorSmoothCaretAnimation: "on",
+              quickSuggestions: false,
+              suggestOnTriggerCharacters: false,
+              acceptSuggestionOnEnter: "off",
+              tabCompletion: "off",
+              wordBasedSuggestions: "off",
+              parameterHints: { enabled: false },
+              inlineSuggest: { enabled: false },
+              snippetSuggestions: "none",
             }}
           />
         </ResizablePanel>
@@ -299,17 +315,19 @@ export function IDE({ problem }: IDEProps) {
         <ResizablePanel defaultSize={35} minSize={15}>
           <div className="h-full flex flex-col bg-[#1e1e1e]">
             <div className="flex border-b border-white/5 bg-[#252526]">
-              <button
-                onClick={() => setActiveTab('samples')}
-                className={cn(
-                  "px-4 py-2 text-xs font-medium uppercase tracking-wider transition-colors border-b-2",
-                  activeTab === 'samples'
-                    ? "text-white border-primary bg-white/5"
-                    : "text-muted-foreground border-transparent hover:text-white"
-                )}
-              >
-                예제 선택
-              </button>
+              {hasProblem && (
+                <button
+                  onClick={() => setActiveTab('samples')}
+                  className={cn(
+                    "px-4 py-2 text-xs font-medium uppercase tracking-wider transition-colors border-b-2",
+                    activeTab === 'samples'
+                      ? "text-white border-primary bg-white/5"
+                      : "text-muted-foreground border-transparent hover:text-white"
+                  )}
+                >
+                  예제 선택
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab('input')}
                 className={cn(
@@ -335,10 +353,10 @@ export function IDE({ problem }: IDEProps) {
             </div>
 
             <ScrollArea className="flex-1 p-4">
-              {activeTab === 'samples' && (
+              {hasProblem && activeTab === 'samples' && (
                 <div className="space-y-4 pb-8">
                   <div className="flex flex-wrap gap-2">
-                    {problem.testCases?.map((tc: TestCase) => {
+                    {testCases.map((tc: TestCase) => {
                       const result = tc.sampleNumber ? testResults[tc.sampleNumber] : null;
                       let statusColor = "bg-secondary text-secondary-foreground hover:bg-secondary/80";
                       if (result) {
@@ -373,13 +391,13 @@ export function IDE({ problem }: IDEProps) {
                       <div className="space-y-2">
                         <label className="text-[10px] text-muted-foreground uppercase">예제 입력</label>
                         <pre className="p-4 bg-black/50 rounded-md border border-white/10 text-xs font-mono whitespace-pre-wrap">
-                          {problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase)?.input}
+                          {testCases.find((t: TestCase) => t.sampleNumber === selectedTestCase)?.input}
                         </pre>
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] text-muted-foreground uppercase">예상 출력</label>
                         <pre className="p-4 bg-black/50 rounded-md border border-white/10 text-xs font-mono whitespace-pre-wrap text-green-400/80">
-                          {problem.testCases?.find((t: TestCase) => t.sampleNumber === selectedTestCase)?.expectedOutput}
+                          {testCases.find((t: TestCase) => t.sampleNumber === selectedTestCase)?.expectedOutput}
                         </pre>
                       </div>
                     </div>
@@ -434,7 +452,7 @@ export function IDE({ problem }: IDEProps) {
                       </span>
                     </div>
                   )}
-                  {!isInputMatched && (
+                  {currentTestCase && !isInputMatched && (
                     <div className="bg-secondary/20 p-3 rounded border border-white/5 space-y-1">
                       <div className="text-[10px] text-muted-foreground uppercase font-semibold">사용한 입력 (Current Input)</div>
                       <pre className="text-xs font-mono text-muted-foreground truncate italic">{customInput || "(입력 없음)"}</pre>
