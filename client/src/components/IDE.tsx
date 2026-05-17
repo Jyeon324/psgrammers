@@ -630,11 +630,11 @@ export function IDE({ problem }: IDEProps) {
                               </Button>
                             </div>
 
-                            <div className="grid gap-4 lg:grid-cols-2">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                               <div className="space-y-2">
                                 <label className="text-[10px] text-muted-foreground uppercase font-semibold">예제 입력 {index + 1}</label>
                                 <textarea
-                                  className="min-h-[96px] w-full resize-y rounded-md border border-white/10 bg-black/40 p-3 font-mono text-xs text-gray-200 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                                  className="min-h-[108px] w-full resize-none rounded-md border border-white/10 bg-black/40 p-3 font-mono text-xs text-gray-200 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
                                   placeholder="입력값"
                                   value={testCase.input}
                                   onChange={(e) => handleUpdateCustomTestCase(testCase.id, "input", e.target.value)}
@@ -643,7 +643,7 @@ export function IDE({ problem }: IDEProps) {
                               <div className="space-y-2">
                                 <label className="text-[10px] text-muted-foreground uppercase font-semibold">예제 출력 {index + 1}</label>
                                 <textarea
-                                  className="min-h-[96px] w-full resize-y rounded-md border border-white/10 bg-black/40 p-3 font-mono text-xs text-green-300 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                                  className="min-h-[64px] w-full resize-none rounded-md border border-white/10 bg-black/40 p-3 font-mono text-xs text-green-300 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
                                   placeholder="예상 출력"
                                   value={testCase.expectedOutput}
                                   onChange={(e) => handleUpdateCustomTestCase(testCase.id, "expectedOutput", e.target.value)}
@@ -713,7 +713,7 @@ export function IDE({ problem }: IDEProps) {
                             {result?.success === false && <AlertCircle className="w-4 h-4 text-red-400" />}
                           </div>
 
-                          <div className="grid gap-4 lg:grid-cols-2">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                               <label className="text-[10px] text-muted-foreground uppercase font-semibold">예상 출력</label>
                               <pre className="min-h-[72px] rounded-md border border-white/10 bg-black/40 p-3 font-mono text-xs whitespace-pre-wrap text-green-300">
