@@ -22,7 +22,15 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen bg-white text-gray-800 font-sans flex flex-col items-center justify-center -mt-20">
+        <div className="relative min-h-screen bg-white text-gray-800 font-sans flex flex-col items-center justify-center -mt-20">
+            <Button
+                className="absolute right-4 top-24 h-10 rounded-full bg-[#0076C0] px-4 text-white shadow-sm hover:bg-[#0066a6] sm:right-6 sm:top-6"
+                onClick={() => setLocation("/ide")}
+            >
+                <Code2 className="h-4 w-4" />
+                IDE
+            </Button>
+
             <div className="w-full max-w-2xl px-4 flex flex-col items-center gap-8">
                 <Link href="/" className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
                     <div className="text-6xl font-bold text-[#0076C0] tracking-tighter">
