@@ -24,7 +24,6 @@ export default function Home() {
     return (
         <div className="min-h-screen bg-white text-gray-800 font-sans flex flex-col items-center justify-center -mt-20">
             <div className="w-full max-w-2xl px-4 flex flex-col items-center gap-8">
-                {/* Logo Area */}
                 <Link href="/" className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity">
                     <div className="text-6xl font-bold text-[#0076C0] tracking-tighter">
                         psgrammers
@@ -34,7 +33,6 @@ export default function Home() {
                     </p>
                 </Link>
 
-                {/* Search Box */}
                 <div className="w-full relative group">
                     <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                         <Search className="h-5 w-5 text-gray-400 group-focus-within:text-[#0076C0] transition-colors" />
@@ -65,10 +63,9 @@ export default function Home() {
                     onClick={() => setLocation("/ide")}
                 >
                     <Code2 className="mr-2 h-4 w-4" />
-                    IDE 열기
+                    문제 없이 IDE 열기
                 </Button>
 
-                {/* Footer / Links (Optional, kept minimal) */}
                 <div className="flex gap-6 text-sm text-gray-400 mt-8">
                     <span className="hover:text-[#0076C0] cursor-pointer transition-colors">문제 검색 방법</span>
                     <span className="hover:text-[#0076C0] cursor-pointer transition-colors">랜덤 풀기</span>
