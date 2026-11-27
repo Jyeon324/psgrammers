@@ -1,9 +1,9 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import type { Monaco } from "@monaco-editor/react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
-import { Loader2, Play, CheckCircle2, AlertCircle, AlertTriangle, ChevronDown, Plus, Trash2 } from "lucide-react";
+import { Loader2, Play, CheckCircle2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useRunCode } from "@/hooks/use-compiler";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -80,7 +80,15 @@ rl.on('close', () => {
 };
 
 const EMPTY_TEST_CASES: TestCase[] = [];
-const DEFAULT_CUSTOM_TEST_CASES: CustomTestCase[] = [{ id: 1, input: "", expectedOutput: "" }];
+
+const createEmptyCustomTestCase = (id: number): CustomTestCase => ({
+  id,
+  input: "",
+  expectedOutput: "",
+});
+
+const createDefaultCustomTestCases = () => [createEmptyCustomTestCase(1)];
+const CUSTOM_TEST_CASE_PULL_THRESHOLD = 56;
 
 const DISABLE_SUGGEST_OPTIONS = {
   quickSuggestions: { other: false, comments: false, strings: false },
@@ -140,11 +148,11 @@ const normalizeOutput = (str: string | null | undefined) => {
 
 const loadCustomTestCases = (storageScope: string) => {
   const saved = localStorage.getItem(`${storageScope}_custom_cases`);
-  if (!saved) return DEFAULT_CUSTOM_TEST_CASES;
+  if (!saved) return createDefaultCustomTestCases();
 
   try {
     const parsed = JSON.parse(saved) as CustomTestCase[];
-    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_CUSTOM_TEST_CASES;
+    if (!Array.isArray(parsed) || parsed.length === 0) return createDefaultCustomTestCases();
 
     return parsed.map((testCase, index) => ({
       id: Number.isFinite(testCase.id) ? testCase.id : index + 1,
@@ -152,7 +160,7 @@ const loadCustomTestCases = (storageScope: string) => {
       expectedOutput: testCase.expectedOutput ?? "",
     }));
   } catch {
-    return DEFAULT_CUSTOM_TEST_CASES;
+    return createDefaultCustomTestCases();
   }
 };
 
@@ -208,7 +216,14 @@ export function IDE({ problem }: IDEProps) {
   const [selectedTestCase, setSelectedTestCase] = useState<number | null>(null);
 
   const editorRef = useRef<any>(null);
+  const customTestCaseScrollAreaRef = useRef<HTMLDivElement>(null);
+  const customTestCasePullStartYRef = useRef<number | null>(null);
+  const customTestCasePullPointerIdRef = useRef<number | null>(null);
+  const customTestCaseScrollAnimationFrameRef = useRef<number | null>(null);
+  const previousCustomTestCaseCountRef = useRef(customTestCases.length);
+  const [customTestCasePullDistance, setCustomTestCasePullDistance] = useState(0);
   const runCode = useRunCode();
+  const isCustomTestCaseActionDisabled = isRunning || isRunningAll || runCode.isPending;
 
   useEffect(() => {
     if (testCases.length > 0 && selectedTestCase === null) {
@@ -222,6 +237,25 @@ export function IDE({ problem }: IDEProps) {
       localStorage.setItem(`${storageScope}_custom_cases`, JSON.stringify(customTestCases));
     }
   }, [customTestCases, hasProblem, storageScope]);
+
+  useEffect(() => {
+    const previousCount = previousCustomTestCaseCountRef.current;
+    if (!hasProblem && customTestCases.length > previousCount) {
+      customTestCaseScrollAnimationFrameRef.current = window.requestAnimationFrame(() => {
+        customTestCaseScrollAnimationFrameRef.current = null;
+        const viewport = customTestCaseScrollAreaRef.current?.querySelector<HTMLElement>("[data-radix-scroll-area-viewport]");
+        viewport?.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" });
+      });
+    }
+    previousCustomTestCaseCountRef.current = customTestCases.length;
+
+    return () => {
+      if (customTestCaseScrollAnimationFrameRef.current !== null) {
+        window.cancelAnimationFrame(customTestCaseScrollAnimationFrameRef.current);
+        customTestCaseScrollAnimationFrameRef.current = null;
+      }
+    };
+  }, [customTestCases.length, hasProblem]);
 
   const handleEditorDidMount: OnMount = (editor, monaco: Monaco) => {
     editorRef.current = editor;
@@ -272,15 +306,104 @@ export function IDE({ problem }: IDEProps) {
   };
 
   const handleAddCustomTestCase = () => {
+    if (isCustomTestCaseActionDisabled) return;
+
     setCustomTestCases(prev => {
       const nextId = Math.max(0, ...prev.map(testCase => testCase.id)) + 1;
-      return [...prev, { id: nextId, input: "", expectedOutput: "" }];
+      return [...prev, createEmptyCustomTestCase(nextId)];
     });
   };
 
+  const getCustomTestCaseScrollViewport = () => (
+    customTestCaseScrollAreaRef.current?.querySelector<HTMLElement>("[data-radix-scroll-area-viewport]")
+  );
+
+  const isCustomTestCaseScrollAtBottom = () => {
+    const viewport = getCustomTestCaseScrollViewport();
+    return Boolean(viewport && viewport.scrollTop + viewport.clientHeight >= viewport.scrollHeight - 2);
+  };
+
+  const handleCustomTestCasePullStart = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (
+      customTestCasePullPointerIdRef.current !== null
+      || isCustomTestCaseActionDisabled
+      || !isCustomTestCaseScrollAtBottom()
+    ) return;
+
+    customTestCasePullPointerIdRef.current = event.pointerId;
+    customTestCasePullStartYRef.current = event.clientY;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setCustomTestCasePullDistance(0);
+  };
+
+  const handleCustomTestCasePullMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (
+      event.pointerId !== customTestCasePullPointerIdRef.current
+      || customTestCasePullStartYRef.current === null
+    ) return;
+
+    const distance = Math.max(0, customTestCasePullStartYRef.current - event.clientY);
+    if (distance > 0) event.preventDefault();
+    setCustomTestCasePullDistance(Math.min(distance, CUSTOM_TEST_CASE_PULL_THRESHOLD));
+  };
+
+  const resetCustomTestCasePull = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerId !== customTestCasePullPointerIdRef.current) return;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    customTestCasePullPointerIdRef.current = null;
+    customTestCasePullStartYRef.current = null;
+    setCustomTestCasePullDistance(0);
+  };
+
+  const handleCustomTestCasePullEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (
+      event.pointerId !== customTestCasePullPointerIdRef.current
+      || customTestCasePullStartYRef.current === null
+    ) return;
+
+    const distance = Math.max(0, customTestCasePullStartYRef.current - event.clientY);
+    const shouldAddTestCase = distance >= CUSTOM_TEST_CASE_PULL_THRESHOLD
+      && !isCustomTestCaseActionDisabled
+      && isCustomTestCaseScrollAtBottom();
+
+    resetCustomTestCasePull(event);
+
+    if (shouldAddTestCase) handleAddCustomTestCase();
+  };
+
+  const handleCustomTestCasePullKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (
+      (event.key !== "Enter" && event.key !== " ")
+      || event.repeat
+      || isCustomTestCaseActionDisabled
+      || !isCustomTestCaseScrollAtBottom()
+    ) return;
+    event.preventDefault();
+    handleAddCustomTestCase();
+  };
+
+  const handleResetCustomTestCases = () => {
+    if (isCustomTestCaseActionDisabled) return;
+
+    setCustomTestCases(createDefaultCustomTestCases());
+    setCustomTestResults({});
+    setOutput("");
+  };
+
   const handleRemoveCustomTestCase = (id: number) => {
+    if (isCustomTestCaseActionDisabled) return;
+
     setCustomTestCases(prev => {
-      if (prev.length === 1) return prev;
+      if (prev.length === 1) {
+        return prev.map(testCase => (
+          testCase.id === id
+            ? { ...testCase, input: "", expectedOutput: "" }
+            : testCase
+        ));
+      }
       return prev.filter(testCase => testCase.id !== id);
     });
     setCustomTestResults(prev => {
@@ -498,7 +621,7 @@ export function IDE({ problem }: IDEProps) {
               </button>
             </div>
 
-            <ScrollArea className="flex-1 p-4">
+            <ScrollArea ref={customTestCaseScrollAreaRef} className="flex-1 p-4">
               {hasProblem && activeTab === 'samples' && (
                 <div className="space-y-4 pb-8">
                   <div className="flex flex-wrap gap-2">
@@ -577,21 +700,38 @@ export function IDE({ problem }: IDEProps) {
                         <h2 className="text-sm font-semibold text-white">테스트 케이스</h2>
                         <p className="text-xs text-muted-foreground">입력과 예상 출력을 원하는 만큼 추가하세요.</p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 border-white/10 text-gray-200 hover:bg-white/10"
-                        onClick={handleAddCustomTestCase}
-                      >
-                        <Plus className="w-4 h-4" />
-                        추가
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 border-white/10 text-gray-200 hover:bg-white/10"
+                          onClick={handleResetCustomTestCases}
+                          disabled={isCustomTestCaseActionDisabled}
+                          aria-label="테스트 케이스 초기화"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          초기화
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 border-white/10 text-gray-200 hover:bg-white/10"
+                          onClick={handleAddCustomTestCase}
+                          disabled={isCustomTestCaseActionDisabled}
+                        >
+                          <Plus className="w-4 h-4" />
+                          추가
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="space-y-4">
                       {customTestCases.map((testCase, index) => {
                         const result = customTestResults[testCase.id];
                         const hasExpectedOutput = testCase.expectedOutput.trim().length > 0;
+                        const customTestCaseActionLabel = customTestCases.length === 1
+                          ? `예제 ${index + 1} 초기화`
+                          : `예제 ${index + 1} 삭제`;
 
                         return (
                           <div
@@ -623,8 +763,9 @@ export function IDE({ problem }: IDEProps) {
                                 variant="ghost"
                                 className="h-8 w-8 text-muted-foreground hover:bg-red-500/10 hover:text-red-400"
                                 onClick={() => handleRemoveCustomTestCase(testCase.id)}
-                                disabled={customTestCases.length === 1}
-                                aria-label={`예제 ${index + 1} 삭제`}
+                                disabled={isCustomTestCaseActionDisabled}
+                                aria-label={customTestCaseActionLabel}
+                                title={customTestCaseActionLabel}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -634,7 +775,7 @@ export function IDE({ problem }: IDEProps) {
                               <div className="space-y-2">
                                 <label className="text-[10px] text-muted-foreground uppercase font-semibold">예제 입력 {index + 1}</label>
                                 <textarea
-                                  className="min-h-[108px] w-full resize-none rounded-md border border-white/10 bg-black/40 p-3 font-mono text-xs text-gray-200 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                                  className="h-[72px] w-full resize-none rounded-md border border-white/10 bg-black/40 p-3 font-mono text-xs text-gray-200 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
                                   placeholder="입력값"
                                   value={testCase.input}
                                   onChange={(e) => handleUpdateCustomTestCase(testCase.id, "input", e.target.value)}
@@ -643,7 +784,7 @@ export function IDE({ problem }: IDEProps) {
                               <div className="space-y-2">
                                 <label className="text-[10px] text-muted-foreground uppercase font-semibold">예제 출력 {index + 1}</label>
                                 <textarea
-                                  className="min-h-[64px] w-full resize-none rounded-md border border-white/10 bg-black/40 p-3 font-mono text-xs text-green-300 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                                  className="h-[72px] w-full resize-none rounded-md border border-white/10 bg-black/40 p-3 font-mono text-xs text-green-300 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
                                   placeholder="예상 출력"
                                   value={testCase.expectedOutput}
                                   onChange={(e) => handleUpdateCustomTestCase(testCase.id, "expectedOutput", e.target.value)}
@@ -657,6 +798,48 @@ export function IDE({ problem }: IDEProps) {
                           </div>
                         );
                       })}
+                    </div>
+                    <div className="space-y-2 pt-1">
+                      <div
+                        role="button"
+                        tabIndex={isCustomTestCaseActionDisabled ? -1 : 0}
+                        aria-disabled={isCustomTestCaseActionDisabled}
+                        onKeyDown={handleCustomTestCasePullKeyDown}
+                        onPointerDown={handleCustomTestCasePullStart}
+                        onPointerMove={handleCustomTestCasePullMove}
+                        onPointerUp={handleCustomTestCasePullEnd}
+                        onPointerCancel={resetCustomTestCasePull}
+                        onLostPointerCapture={resetCustomTestCasePull}
+                        className={cn(
+                          "flex min-h-10 touch-none select-none items-center justify-center gap-2 rounded-md border border-dashed border-white/10 px-3 text-xs text-muted-foreground transition-colors",
+                          isCustomTestCaseActionDisabled ? "cursor-not-allowed opacity-50" : "cursor-grab hover:border-primary/40 hover:text-gray-200 active:cursor-grabbing",
+                          customTestCasePullDistance >= CUSTOM_TEST_CASE_PULL_THRESHOLD && "border-primary/60 bg-primary/10 text-primary"
+                        )}
+                      >
+                        <ChevronUp
+                          className={cn(
+                            "h-4 w-4 transition-transform",
+                            customTestCasePullDistance >= CUSTOM_TEST_CASE_PULL_THRESHOLD && "-translate-y-0.5"
+                          )}
+                        />
+                        <span>
+                          {customTestCasePullDistance >= CUSTOM_TEST_CASE_PULL_THRESHOLD
+                            ? "놓으면 새 예제 추가"
+                            : "위로 당겨 새 예제 추가"}
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="w-full border-dashed border-white/15 text-gray-300 hover:bg-white/10"
+                        onClick={handleAddCustomTestCase}
+                        disabled={isCustomTestCaseActionDisabled}
+                        aria-label="새 예제 추가"
+                      >
+                        <Plus className="w-4 h-4" />
+                        예제 추가
+                      </Button>
                     </div>
                   </div>
                 )

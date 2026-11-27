@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+.git
+.hermes
+data
+**/.env
+**/.env.*
+!**/.env.example
+**/.gradle
+**/build
