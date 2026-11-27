@@ -116,3 +116,26 @@
 .problem-html li {
   margin-bottom: 0.5rem;
 }
+
+/* BOJ grid tables (e.g. 2468, 1012, 2178): BOJ sizes them by % of its page width
+   (table-center-20, inline width:40%), which stretches cells in our narrower panel.
+   Size the table to its content and give every cell the same square minimum so
+   an N×N grid renders square and an N×M grid renders as a proportional rectangle. */
+.problem-html table.table-bordered {
+  width: auto !important;
+  margin: 1rem auto;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.problem-html table.table-bordered th,
+.problem-html table.table-bordered td {
+  width: auto !important; /* BOJ sometimes sets inline td widths like 4% */
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0 0.5rem;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  border: 1px solid hsl(var(--border));
+}
