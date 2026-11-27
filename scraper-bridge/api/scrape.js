@@ -47,6 +47,34 @@ async function inlineImages($, html, headers) {
     return $fragment.html();
 }
 
+// BOJ draws some figures with HTML tables + problem-specific CSS placed in <head>
+// (e.g. 2468: `.bg-2468 { background-color: #bbb; }`). Collect those <style> blocks
+// and scope every selector under `.problem-html` so they can't leak into the app.
+function scopeCss(css) {
+    return css.replace(/([^{}@]+)\{([^{}]*)\}/g, (match, selectors, body) => {
+        const scoped = selectors
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .map((s) => (/^(from|to|\d+%)$/.test(s) ? s : `.problem-html ${s}`))
+            .join(', ');
+        // Our UI is dark; give light backgrounds dark text so the numbers stay readable.
+        const hasBg = /background(-color)?\s*:/i.test(body);
+        const hasColor = /(^|;|\s)color\s*:/i.test(body);
+        const extra = hasBg && !hasColor ? ' color: #111;' : '';
+        return `${scoped} {${body}${extra}}`;
+    });
+}
+
+function extractProblemStyles($) {
+    const blocks = [];
+    $('style').each((_, el) => {
+        const css = $(el).html();
+        if (css && css.trim()) blocks.push(scopeCss(css.trim()));
+    });
+    return blocks.length ? `<style>${blocks.join('\n')}</style>\n` : '';
+}
+
 module.exports = async (req, res) => {
     const { id } = req.query;
 
@@ -80,6 +108,12 @@ module.exports = async (req, res) => {
             inlineImages($, inputDescription, headers),
             inlineImages($, outputDescription, headers),
         ]);
+
+        // 3-1. Keep BOJ's problem-specific CSS (table-drawn figures)
+        const problemStyles = extractProblemStyles($);
+        if (problemStyles && description) {
+            description = problemStyles + description;
+        }
 
         // Extract Test Cases
         const testCases = [];
